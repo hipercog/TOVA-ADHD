@@ -1,0 +1,328 @@
+1033P: bad chans
+Goodbye: B32, D3, D20, D25
+Hello: B32, D3, D20, D25
+Saliency: B32, D3, D20, D25
+Tova: B32, D3, D20, D25
+Vigilance: B32, D3, D20, D25
+
+1068P: bad chans
+Goodbye: A28, B32, D19, B30, B24
+Hello: A28, B32, D19, B30
+Saliency: A28, B32, D19, B30, D25, B24, B22
+Tova: A28, B32, D19, B30
+Vigilancy: A28, B32, D19, B30, D25
+
+1007P: bad chans
+Goodbye: B32,A28, D3, D8
+Hello: B32,A28, D3, D8
+Saliency: B32,A28, D3, D8
+Tova: B32,A28, D3, D8
+Vigilancy: B32,A28, D3, D8, B30, A5
+
+1003P: bad chans
+Goodbye: A28, B32, B8, B14
+Hello: A28, B32, A26, B8, B26
+Saliency: A28, B32, B8, A12
+Tova: A28, B32, B8
+Vigilancy: A28, B32, B8, A12
+
+1024P: bad chans
+Goodbye: protocol not completed
+Hello: D3, B3, B32, A28, B30, B17, B14, B10
+Saliency: protocol not completed
+Tova: D3, B3, B32, A28, B30, B17, B14, B10
+Vigilancy: D3, B3, B32, A28, B30, B17, B14, B10
+
+1061P: bad chans
+Goodbye: B32, A31, C3, C11, C12, B16, B10
+Hello: B32, A31, C3, C11, C12, B16, B10
+Saliency: B32, A31, C3, C11, C12, B16, B10
+Tova: B32, A31, C3, C11, C12, B16, B10
+Vigilancy: B32, A31, C3, C11, C12, B16, B10
+
+1045P: bad chans
+Goodbye: C6, B32, A28, D3, D17, D5, C5, B27
+Hello:  B32, A28, D3, C6, D5
+Saliency: B32, A28, D3, C6, D17, D5, C5, B27
+Tova: B32, A28, D3, C6, D5, D17
+Vigilance: B32, A28, D3, C6, D17, B27, D5 
+
+1053P: bad chans
+Goodbye: B32, D3, A31, B30, C5, C6, D25, A30, B25, B26
+Hello: B32, D3, A31, B30, C5, C6, D25, B14, B15
+Saliency: B32, D3, A31, B30, C5, C6, D25, A30, B25, B26
+Tova: B32, D3, A31, B30, C5, C6, D25, B25, B26, A30
+Vigilancy: B32, D3, A31, B30, C5, C6, D25, B25, B26, A30
+
+1054P: bad chans
+Goodbye: B32
+Hello: B32
+Saliency: B32
+Tova: B32, D16
+Vigilancy: B32
+
+1055P: bad chans
+Goodbye: D3, B32, A16, B8, A26, B15, B12
+Hello: D3, B32, A16, B8, A20, A26, A12, A27
+Saliency: D3, B32, A16, B12, B15, B8
+Tova: D3, B32, A16, A20, A21, B8
+Vigilancy: D3, B32, A16, B14, B15, B8, A26
+
+1023P: bad chans
+Goodbye: B32, A28, D30, D24, D31, D32
+Hello: B32, A28
+Saliency: B32, A28
+Tova: B32, A28
+Vigilancy: B32, A28
+
+1059P: bad chans
+Goodbye: A28, D3, B32, D30
+Hello: A28, D3, B32
+Saliency: A28, D3, B32, D24, D31, D32
+Tova: A28, D3, B32, D24, D31, D32
+Vigilancy: A28, D3, B32, D24, D31, D32
+
+1057P: bad chans
+Goodbye: A28, B32
+Hello: A28, B32, D1, D22
+Saliency: A28, B32
+Tova: A28, B32
+Vigilancy: A28, B32
+
+1015P: bad chans
+Goodbye: A28, B32, D3, D23, D11, B31, B8, B9
+Hello: A28, B32, D3, D23, D11, B31, B8, B9, C11, D21, D22
+Saliency: A28, B32, D3, D23, D11, B31, B8, B9
+Tova: A28, B32, D3, D23, D11, B31, B8, B9, D22
+Vigilancy: A28, B32, D3, D23, D11, B31, B8, B9
+
+1060P: bad chans
+Goodbye: A28, B32, B6, A8, A9, A10, B8, A25, A27
+Hello: A28, B32, B6, A8, A9, A10, B8, A25, A27
+Saliency: A28, B32, B6, A8, A9, A10, B8, A25, A27
+Tova: A28, B32, B6, A8, A9, A10, B8, A25, A27
+Vigilancy: A28, B32, B6, A8, A9, A10, B8, A25, A27
+
+1025P: bad chans
+Goodbye: D3, A28, B32, B19, B2
+Hello: D3, A28, B32, B19, B2
+Saliency: D3, A28, B32, B19, B2
+Tova: D3, A28, B32, B19, B2
+Vigilancy: D3, A28, B32, B19, B2
+
+1048P: bad chans
+Goodbye: A28, B32, D21
+Hello: A28, B32
+Saliency: A28, B32
+Tova: A28, B32, D21
+Vigilancy: A28, B32, A30
+
+1035P: bad chans
+Goodbye: A28, B32, D3, B14
+Hello: A28, B32, D3, B14
+Saliency: A28, B32, D3, B14
+Tova: A28, B32, D3, B14
+Vigilancy: A28, B32, D3, B14
+
+1056P: bad chans
+Goodbye: B32, A22, A23, B5, C30
+Hello: B32, C30
+Saliency: B32, C30, A22, A23
+Tova: B32, C30
+Vigilancy: B32, C30
+
+1001P: bad chans
+Goodbye: B32, D3, B7, B9, A26, A28
+Hello: B32, D3, B7, B8, B9
+Saliency: B32, D3, B7, B8, B9, A26, A28
+Tova: B32, D3, B7, B8, B9, A26
+Vigilancy: B32, D3, B7, B8, B9
+
+1052P: bad chans
+Goodbye: B32
+Hello: B32
+Saliency: B32
+Tova: B32
+Vigilancy: B32
+
+1034P: bad chans
+Goodbye: B32, B28, B10, B26
+Hello: B32, A11
+Saliency: B32, B26, B28, A11
+Tova: B32, B26, B28, A11
+Vigilancy: B32, B26, B28, A11
+
+1066P: bad chans
+Goodbye: B32
+Hello: B32
+Saliency: B32
+Tova: B32
+Vigilancy: B32
+
+1067P: bad chans
+Goodbye: B32, D3, D24, D21, B1, C31
+Hello: B32, D3, D24, D21, D22, D31, B1
+Saliency: B32, D3, D21, D24, C20, B1
+Tova: B32, D3, D21, D24, B1
+Vigilancy: B32, D3, D21, D24, B1
+
+1042P: bad chans
+Goodbye: A28, B32, A23
+Hello: A28, B32
+Saliency: A28, B32
+Tova: A28, B32
+Vigilancy: A28, B32
+
+1062P: bad chans
+Goodbye: B32, C8
+Hello: B32, C8
+Saliency: B32, C8
+Tova: B32, C8
+Vigilancy: B32, C8
+
+1065P: bad chans
+Goodbye: B32, B26, B28, C5, C3, B27
+Hello: B32, B26, B28, C5, B3
+Saliency: B32, B26, B28, C5, B27, C3
+Tova: B32, B26, B28, C5, B27
+Vigilancy: B32, B26, B28, C5, C3, B27
+
+1029P: bad chans
+Goodbye: A28, B32, D3, A6, A20
+Hello:  A28, B32, D3, A6
+Saliency: A28, B32, D3, A6
+Tova: A28, B32, D3, A6, A20
+Vigilancy: A28, B32, D3, A6, A20, D24
+
+1002P: bad chans
+Goodbye: B32
+Hello: B32
+Saliency: B32
+Tova: B32
+Vigilance: B32
+
+1012P: bad chans
+Goodbye: A28, B3, D3, A25, A12, A13, B32
+Hello: A28, B3, D3, A25, B32
+Saliency: A28, B3, D3, A12, A13, B32
+Tova: A28, B3, D3, A12, A13, B32
+Vigilance: A28, B3, B9, D1, D2, D3, A12, A13, B32
+
+1041P: bad chans
+Goodbye: B32, A25
+Hello: B32, D22, D23, A25
+Saliency: B32, A25
+Tova: B32, D22, B13, A25
+Vigilance: B32, A25, C16, C19, D22, D3
+
+1058P: bad chans
+Goodbye: B32, B15, B16, B17, B18, B20, B21, B22, B23, A8, A30
+Hello: A22, A24, A25, A31, A26, A27, A29, A30, B5, B4, B7, B8, B9, B6, B10, B11, B12, B13, B15, B16, B17, B18, B19, B20, B22, B23, B30, B32 
+Saliency: B1, B15, B16, B17, B18, B20, B21, B22, B23, B32
+Tova: A1, A30, B15, B16, B17, B18, B19, B20, B21, B22, B23, B32
+Vigilance: B14, B15, B16, B17, B18, B20, B21, B22, B23, B32, A30
+
+1069P: bad chans
+Goodbye: B32, C17, A30, D9
+Hello: B32, C17, A30, D9, A23, A24, A25, D7, D22, C30
+Saliency: B32, C17, A30, D9
+Tova: B32, C17, A30, D9, D22
+Vigilance: B32, C17, A15, A30, D9, D22
+
+1072P: bad chans
+Goodbye: B32, B21
+Hello: B32, B21, D7, C3, C10
+Saliency: B32, B21
+Tova: B32, B21, D7, C3, C10
+Vigilance: B32, B21
+
+1074P: bad chans
+Goodbye: B3, B32, D3, D19
+Hello: B3, B32, D3, D19
+Saliency: B3, B32, D3, D19
+Tova: B3, B32, D3, D19
+Vigilance: B3, B9, B32, D3, D19, D20
+
+1077P: bad chans
+Goodbye: B32, B19, B20
+Hello: B32
+Saliency: B32, B19, B20
+Tova: B32, B19, B20
+Vigilance: B32, B19, B20
+
+1067P: bad chans
+Goodbye: 
+Hello:  
+Saliency: 
+Tova: 
+Vigilance: 
+
+1072P: bad chans
+Goodbye: B32, B21
+Hello: B32, B21, D7, C3, C10, A10 
+Saliency: B32, B21
+Tova: B32, B21, D7, C3, C10
+Vigilance: B32, B21, D7, C3, C10
+
+1027P: bad chans
+Goodbye: A28, D24, C7
+Hello: A28
+Saliency: A28, D24, D23
+Tova: A28, D24
+Vigilance: A28, D23, D24
+
+1070P: bad chans
+Goodbye: B32 
+Hello: B32 
+Saliency: B32
+Tova: B32
+Vigilance: B32
+
+1019P: bad chans
+Goodbye: A22, A23, A24, A25
+Hello: A23, A24, A25 
+Saliency: A22, A23, A24, A25
+Tova: B27, B28, A22, A23, A24, A25
+Vigilance: A23, A24, A25, B27
+
+1075P: bad chans
+Goodbye: -
+Hello: -
+Saliency: C30, C31, C32
+Tova: - 
+Vigilance: c30, c31, c32
+
+1064P: bad chans
+Goodbye: A28, B32, C7, C8, A10
+Hello:  A28, B32, C7, C8, A20
+Saliency: A28, B32, A10
+Tova: A28, B32, C7, C8, A20
+Vigilance: A28, B32, C7, C8, A20
+
+1076P: bad chans
+Goodbye: B32, B9, B8, A32  
+Hello:  B32, B9, B8, A32
+Saliency: B32, B9, B8, A32
+Tova: B32, B9, B8, A32
+Vigilance: B32, B9, B8, A32
+
+1079P: bad chans
+Goodbye: A16, A22, A23, B32
+Hello: B32, D8, D9, D23
+Saliency: pending
+Tova: pending
+Vigilance: A12, A25, B24, B29, B32
+
+1081P: bad chans
+Goodbye: A1, A25, B31, B32, C2, C7, C8, C29, C30, D8
+Hello: B10, B32, C10, C14
+Saliency: pending
+Tova: pending
+Vigilance: B27, B30, B31, B32, C10, C12, C14
+
+1036P: bad chans
+Goodbye: A11, A13, A14, B32
+Hello: A11, A14, A26, A28, B32, C29
+Saliency: pending
+Tova: pending
+Vigilance: A12, A13, A26, A28, B32, C29, D7, D32
