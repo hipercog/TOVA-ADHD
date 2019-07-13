@@ -2,9 +2,9 @@ function ERPS = runctap_PSICAT(varargin)
 %% Linear CTAP script to clean CENT data
 % 
 % OPERATION STEPS
-% # 1 --------------
-% Install / download:
-% --- HARDWARE ---
+% 
+% # 1 - Install / download:
+% --- SOFTWARE ---
 %   * Matlab R2018b or newer
 %   * EEGLAB, latest version,
 %       git clone https://github.com/sccn/eeglab.git
@@ -12,14 +12,16 @@ function ERPS = runctap_PSICAT(varargin)
 %       https://sccn.ucsd.edu/wiki/EEGLAB_Extensions
 %   * CTAP,
 %       git clone https://github.com/bwrc/ctap.git
+%   * CENT analysis tools,
+%       git clone https://github.com/zenBen/CENT-analysis.git
 % --- DATA ---
 %   * 69 files of EEG data in .bdf format, plus Presentation .log files
-% # 2 --------------
-% Set your working directory to CTAP root
-% # 3 --------------
-% Add EEGLAB and CTAP to your Matlab path
-% # 4 --------------
-% Set up directory to contain .bdf files, pass complete path to 'proj_root'
+% 
+% # 2 - Set your working directory to CTAP root
+% 
+% # 3 - Add EEGLAB and CTAP to your Matlab path
+% 
+% # 4 - Set up directory to contain .bdf files, pass full path to 'proj_root'
 %
 % Syntax:
 %   runctap_PSICAT('proj_root', <some_path>, 'GIX', 1|2)
@@ -37,6 +39,8 @@ function ERPS = runctap_PSICAT(varargin)
 %               Default: 'all'
 %   sbj_filt    [1 n] | 'all', keyword 'all' for all, or some index of subjects
 %               Default: 'all'
+%   epoch_evt   string, name of the event to epoch data
+%               Default: 'target'
 %   overwrite   logical, overwrite existing output
 %               Default: true
 %   debug       logical, stop on error
@@ -50,12 +54,11 @@ ctapID = 'PSICAT';
 %change this to change the protocol? 
 %options: HELLO-GOODBYE, NEUROFEEDBACK, PSICAT, GESTALT, TOVA, VIGILANCE
 
+%TODO - original CENT-CTAP script excluded these files, check why?
+% setdiff(1001:1081, [1053 1061 1055]);
+
 % specify the file type of your data
 data_type = '*.bdf';
-
-%TODO - DEFINE PSICAT EVENTS FOR EPOCHING
-%set of event names for epoching and export for event-related analysis
-evrelevs = {''};
 
 
 %% Parse input parameters
@@ -66,6 +69,7 @@ p.addParameter('group', 'ADHD', @(x) ismember(x, {'ADHD' 'CTRL'}))
 p.addParameter('qcERPloc', '', @ischar)
 p.addParameter('set_select', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
 p.addParameter('sbj_filt', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
+p.addParameter('epoch_evt', 'target', @ischar)
 p.addParameter('overwrite', true, @islogical)
 p.addParameter('debug', false, @islogical)
 
@@ -75,7 +79,10 @@ Arg = p.Results;
 
 %% Create the CONFIGURATION struct
 % First, define step sets & their parameters in sbf_cfg()
-[Cfg, ctap_args] = sbf_cfg(Arg.proj_root, ctapID, Arg.group, evrelevs, Arg.set_select);
+[Cfg, ctap_args] = sbf_cfg(Arg.proj_root, ctapID...
+                         , Arg.epoch_evt...
+                         , Arg.group...
+                         , Arg.set_select);
 
 % Next, create measurement config (MC) based on folder, & select subject subset
 Cfg = get_meas_cfg_MC(Cfg, Arg.proj_root...
@@ -115,12 +122,12 @@ end
 
 %% %%%%%%%%%%%%%%%%%%% CONFIGURE ANALYSIS PIPE!! %%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configuration Subfunction
-function [Cfg, out] = sbf_cfg(project_root_folder, ID, grp, erevts, runsets)
+function [Cfg, out] = sbf_cfg(proj_dir, ID, epoch_evt, grp, runsets)
 
 
 %% Define important directories and files
 Cfg.id = ID;
-Cfg.env.paths.projectRoot = fullfile(project_root_folder, ['project_' ID]);
+Cfg.env.paths.projectRoot = fullfile(proj_dir, ['project_' ID]);
 Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, 'ANALYSIS');
 Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, grp);
 %THIS ONE IS PROBABLY OBSOLETE - Cfg.MC already gives the file locations
@@ -143,7 +150,7 @@ stepSet(i).funH = { @CTAP_load_data,...
                     @CTAP_load_chanlocs,...
                     @CTAP_fir_filter,...
                     @CTAP_fir_filter,...
-                    @CTAP_peek_data };
+                    @CTAP_peek_data }; %BASELINE PEEK POINT!
 stepSet(i).id = [num2str(i) '_load'];
 
 out.load_events = struct(...
@@ -171,7 +178,7 @@ out.load_chanlocs.tidy  = {{'type' 'NA'}};
 
 out.fir_filter = struct(...
     'locutoff', {0.5 []},...
-    'hicutoff', {[] 30},...
+    'hicutoff', {[] 45},...
     'filtorder', {3380 226});
 
 out.peek_data = struct(...
@@ -216,10 +223,10 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER for non-blinks
                     @CTAP_detect_bad_channels,...%bad channels by Mahalanobis
                     @CTAP_reject_data,...
                     @CTAP_interp_chan,...
-                    @CTAP_epoch_data,...
+                    @CTAP_peek_data,... %COMPARISON PEEK POINT!
+                    @CTAP_epoch_data,...%bad epochs by 100uV threshold @vertex
                     @CTAP_detect_bad_epochs,...
-                    @CTAP_reject_data,...
-                    @CTAP_peek_data };
+                    @CTAP_reject_data };
 %MAYBEDO - ADD @CTAP_filter_blink_ica AFTER BLINK BAD ICs?
 stepSet(i).id = [num2str(i) '_denoise_epoch'];
 
@@ -236,7 +243,7 @@ out.epoch_data = struct(...
     'method', 'epoch',...
     'match',  'exact',...
     'timelim', [-250 500],...
-    'evtype', erevts);%TODO - POPULATE THIS WITH NAMES OF EPOCHING EVENTS!!
+    'evtype', epoch_evt);
 
 out.detect_bad_epochs = struct(...
     'channels', {{'A1'}},...
@@ -245,21 +252,27 @@ out.detect_bad_epochs = struct(...
 
 
 %% STEPSET 4 - Export
+%set of event names for epoching and export for event-related analysis
+erpevts = struct('hitmiss', 'hit'...
+                , 'type', 'target'...
+                , 'congruency', {'Congruent' 'Congruent' 'InCon' 'InCon'}...
+                , 'shape', {'shape' 'nonShape' 'shape' 'nonShape'});
+
 i = i + 1; %next stepSet
-stepSet(i).funH = repmat({@CTAP_export_data}, 1, numel(erevts));
+stepSet(i).funH = repmat({@CTAP_export_data}, 1, numel(erpevts));
 stepSet(i).id = [num2str(i) '_export'];
 stepSet(i).save = false;
 
 out.export_data = struct(...
     'type', 'hdf5',...
     'outdir', fullfile('exportRoot', 'HDF5_EXPORT'),...
-    'lock_event', erevts);
+    'lock_event', {erpevts(1) erpevts(2) erpevts(3) erpevts(4)});
 
 
 %% Store to Cfg
 Cfg.pipe.stepSets = stepSet; % return all step sets inside Cfg struct
 % step sets to run, default: whole thing
-if nargin == 5
+if exist('runsets', 'var')
     Cfg.pipe.runSets = runsets;
 else
     Cfg.pipe.runSets = {stepSet(:).id};
