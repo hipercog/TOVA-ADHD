@@ -9,21 +9,21 @@ function EEG = loadCENTevents(EEG, log_src, varargin)
 % Syntax:
 %   EEG = loadCENTevents(EEG, varargin)
 %
-% INputs:
+% Inputs:
 %   EEG             struct, EEG struct to process
 %   log_src         string, directory containing, or full path to, log file
 %                           If empty string is passed, 'log_src' will be set
 %                           equal to directory of original EEG file, obtained
 %                           from 'EEG.comments' field
 %
-%   varargin
+% Varargin
 %   'mkplot'        logical, plot interpolation of event times
 %                   Default: false
 %   'name'          string, 
 %   'protocol'      string, 
 %   'date'          string, 
 %
-%   OUTPUT
+% Output:
 %   'EEG'       : EEG struct, with updated events structure
 %
 % NOTE:     
@@ -51,31 +51,21 @@ Arg = p.Results;
 
 
 %% Get the log file source and naming data for the EEG
-temp=EEG.comments;
-idxstr='Original file: ';
-[x,~]=size(temp);
-if x>1
-    temp=mat2cell(temp,ones(x,1));
-    fpath=strfind(temp, idxstr);
-    temp=temp{~cellfun(@isempty,fpath)};
-    fpath=fpath{~cellfun(@isempty,fpath)};
-else
-    fpath=strfind(temp, idxstr);
+if ~isempty(log_src)
+    [origEEGdir, fname, e] = fileparts(log_src);
+elseif ~isempty(EEG.filename)
+    [origEEGdir, fname, e] = fileparts(EEG.filename);
+elseif ~isempty(EEG.comments)
+    [origEEGdir, fname, e] = fileparts(strrep(EEG.comments, 'Original file: ', ''));
 end
-if ~isempty(fpath) && isscalar(fpath)
-    [origEEGdir, fname, ~] = fileparts(temp(fpath+length(idxstr):end));
-    [~, Arg.date, Arg.name, Arg.protocol, ~] = parseCENTfname( fname );
+if ~isfolder(origEEGdir)
+    error('loadCENTevents:no_source',...
+        [''  ' - auto-found directory does not exist.']);
 end
+log_src = fullfile(origEEGdir, [fname '.' strrep(e, '.', '')]);
+[~, Arg.date, Arg.name, Arg.protocol, ~] = parseCENTfname( fname );
 
 % If directory is not given, look in the home of the original EEG file
-if isempty(log_src)
-    if isfolder(origEEGdir)
-        log_src = origEEGdir;
-    else
-        error('CTAP:loadCENTevents',...
-            [log_src ' - auto-found directory does not exist.']);
-    end
-end
     
 % Select the right values for the protocol we see
 npt = pickfmatch({'salience','vigilance','gestalt','hello','goodbye','tova'}...
@@ -103,6 +93,8 @@ if max(evt) > 32767, byte_off = 65280; else byte_off = 32512; end %#ok<SEPEX>
 for k = 1:length(evt)
     EEG.event(k).type = num2str(evt(k) - byte_off);
 end
+idx = ismember({EEG.event.type}, '0');
+EEG.event(idx) = [];
 
 
 %% Grab events from Pres log for any protocol except TOVA
@@ -124,8 +116,7 @@ if isfolder(log_src)
     log_src = fullfile(log_src, logs(m).name);
 end
 % Check the names match
-[~, logname, ~] = fileparts(log_src);
-[~, ~, logname, ~, ~] = parseCENTfname( logname );
+[~, ~, logname, ~, ~] = parseCENTfname( fname );
 if strcmp( logname, Arg.name ) == 0
     disp(['Log = ' logname '; EEG = ' Arg.name '; PRES LOG WRITE FAIL']);
     return;
