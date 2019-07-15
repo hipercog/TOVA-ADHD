@@ -8,8 +8,6 @@ function ERPS = runctap_PSICAT(varargin)
 %   * Matlab R2018b or newer
 %   * EEGLAB, latest version,
 %       git clone https://github.com/sccn/eeglab.git
-%   * Add Biosig 3.3.0 (the Biosemi .bdf-reader plugin) to EEGLAB,
-%       https://sccn.ucsd.edu/wiki/EEGLAB_Extensions
 %   * CTAP,
 %       git clone https://github.com/bwrc/ctap.git
 %   * CENT analysis tools,
