@@ -140,8 +140,7 @@ switch npt
         lgm = find( strcmp( 'Fixation Cross', log_data.coords_str ) );
         tgm = find( strcmp( '143', {EEG.event.type} ) );
         if length(lgm) ~= length(tgm)
-            tgm = union( find(strcmp('142', {EEG.event.type})),...
-                find(strcmp('143', {EEG.event.type})) );
+            tgm = union( find(strcmp('142', {EEG.event.type})), tgm );
         end
     case 2
         % For Vigilance: match on log code 'Mental Arithmetic Result',
@@ -214,9 +213,8 @@ if isempty(lgm) || length(lgm) ~= length(tgm)
     if length(t1) == 1 && length(l1) == 1
         offset = EEG.event(t1).latency - log_data.latencies(l1);
     else
-        disp( ['*** PRES LOG EVENT IMPORT WILL FAIL FOR: '...
-            [Arg.name '-' Arg.protocol] ' ***'] );
-        offset = 0;
+        error('loadCENTevents:no_match', 'PRES-LOG EVENT IMPORT FAILS FOR: %s'...
+            , [Arg.name '-' Arg.protocol] );
     end
 else
     % Calculate the per-samples offset between equivalent events
