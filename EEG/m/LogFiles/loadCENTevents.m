@@ -73,9 +73,10 @@ npt = pickfmatch({'salience','vigilance','gestalt','hello','goodbye','tova'}...
 % Find if this is test group saliency data or not
 if npt ~= 1
     salt = false;
-elseif str2double(Arg.date(1:4)) == 2013
-    npt = 3;
-    salt = false;
+%TODO - Below breaks subject 2022C in Saliency - check is needed for gestalt?
+% elseif str2double(Arg.date(1:4)) == 2013 
+%     npt = 3;
+%     salt = false;
 else
     salt = true;
 end
@@ -128,8 +129,11 @@ log_data.latencies = log_data.time * EEG.srate / 10000;
 % Given the differences introduced by changing Pres logs, we do
 if ~salt,	log_data.coords_str = log_data.code;	end
 nl = numel(log_data.code);
-% Bring EEG events and Log events into alignment - this
-% depends on EEG events being a subset of Pres log
+
+
+%% Bring EEG events and Log events into alignment -
+% this depends on EEG events being a subset of Pres log
+
 offset = NaN( numel(log_data.code), 1 );
 % Find log-event to trigger matches depending on protocol
 lgm=[]; tgm=[];
@@ -229,8 +233,11 @@ end
 log_data.latencies = log_data.latencies + offset;
 if Arg.mkplot && length(lgm) == length(tgm)
     evsPosTest(nl, lgm, tgm, EEG.event, log_data.latencies);
-end    
-% Create event structures - with extra columns for salience test.
+end
+
+
+%% Create event structures - with extra columns for salience test.
+
 if salt
     temp=~cellfun(@isempty,strfind(log_data.pritar_str,'target')) |...
         ~cellfun(@isempty,strfind(log_data.pritar_str,'primer'));
