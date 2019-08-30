@@ -13,7 +13,7 @@ function ERPS = runctap_PSICAT(varargin)
 %   * CENT analysis tools,
 %       git clone https://github.com/zenBen/CENT-analysis.git
 % --- DATA ---
-%   * 69 files of EEG data in .bdf format, plus Presentation .log files
+%   * 69 files of EEG data in .bdf format, plus Presentation .log files 
 %
 % # 2 - Set your working directory to CTAP root
 %
