@@ -1,8 +1,8 @@
 function ERPS = runctap_PSICAT(varargin)
 %% Linear CTAP script to clean CENT data
-% 
+%
 % OPERATION STEPS
-% 
+%
 % # 1 - Install / download:
 % --- SOFTWARE ---
 %   * Matlab R2018b or newer
@@ -14,18 +14,18 @@ function ERPS = runctap_PSICAT(varargin)
 %       git clone https://github.com/zenBen/CENT-analysis.git
 % --- DATA ---
 %   * 69 files of EEG data in .bdf format, plus Presentation .log files
-% 
+%
 % # 2 - Set your working directory to CTAP root
-% 
+%
 % # 3 - Add EEGLAB and CTAP to your Matlab path
-% 
+%
 % # 4 - Set up directory to contain .bdf files, pass full path to 'proj_root'
 %
 % Syntax:
 %   runctap_PSICAT('proj_root', <some_path>, 'GIX', 1|2)
-% 
+%
 % Varargin
-% 
+%
 %   proj_root   string, valid path to the data's project base folder, so that:
 %                       <proj_root>/project_PSICAT/PSICAT-data/<group>
 %               Default: '/wrk/group/hipercog/' (dir on ukko2 server)
@@ -49,7 +49,7 @@ function ERPS = runctap_PSICAT(varargin)
 %% Setup MAIN parameters
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'PSICAT';
-%change this to change the protocol? 
+%change this to change the protocol?
 %options: HELLO-GOODBYE, NEUROFEEDBACK, PSICAT, GESTALT, TOVA, VIGILANCE
 
 %TODO - original CENT-CTAP script excluded these files, check why?
@@ -196,6 +196,8 @@ stepSet(i).funH = { @CTAP_detect_bad_channels,...%given bad channels
                     @CTAP_interp_chan,...
                     @CTAP_reref_data,...
                     @CTAP_blink2event,...
+                    @CTAP_detect_bad_segments,...
+                    @CTAP_reject_data,...
                     @CTAP_run_ica };
 stepSet(i).id = [num2str(i) '_setup_ICA'];
 
@@ -207,6 +209,10 @@ out.interp_chan = struct('missing_types', 'EEG');
 
 out.blink2event = struct(...
     'classMethod', 'emgauss_asymmetric');
+
+out.detect_bad_segments = struct(...
+    'coOcurrencePrc', 0.15,... %require 15% chans > AmpLimits
+    'normalEEGAmpLimits', [-150, 150]); %in muV
 
 out.run_ica = struct(...
     'method', 'fastica',...
