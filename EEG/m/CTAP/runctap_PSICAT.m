@@ -1,8 +1,8 @@
 function ERPS = runctap_PSICAT(varargin)
 %% Linear CTAP script to clean CENT data
-% 
+%
 % OPERATION STEPS
-% 
+%
 % # 1 - Install / download:
 % --- SOFTWARE ---
 %   * Matlab R2018b or newer
@@ -14,18 +14,17 @@ function ERPS = runctap_PSICAT(varargin)
 %       git clone https://github.com/zenBen/CENT-analysis.git
 % --- DATA ---
 %   * 69 files of EEG data in .bdf format, plus Presentation .log files
-% 
+%
 % # 2 - Set your working directory to CTAP root
-% 
+%
 % # 3 - Add EEGLAB and CTAP to your Matlab path
-% 
+%
 % # 4 - Set up directory to contain .bdf files, pass full path to 'proj_root'
 %
 % Syntax:
 %   runctap_PSICAT('proj_root', <some_path>, 'GIX', 1|2)
-% 
+%
 % Varargin
-% 
 %   id          string, an identifier string to append to output base dir
 %               default, ''
 %   proj_root   string, valid path to the data's project base folder, so that:
@@ -51,7 +50,7 @@ function ERPS = runctap_PSICAT(varargin)
 %% Setup MAIN parameters
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'PSICAT';
-%change this to change the protocol? 
+%change this to change the protocol?
 %options: HELLO-GOODBYE, NEUROFEEDBACK, PSICAT, GESTALT, TOVA, VIGILANCE
 
 %TODO - original CENT-CTAP script excluded these files, check why?
@@ -195,10 +194,13 @@ out.peek_data = struct(...
 %% STEPSET 2 - Manual bad chans, reref to mastoids, detect blinks, create ICA
 i = i+1;
 stepSet(i).funH = { @CTAP_detect_bad_channels,...%given bad channels
+                    @CTAP_detect_bad_channels,...%bad channels by variance
                     @CTAP_reject_data,...
                     @CTAP_interp_chan,...
                     @CTAP_reref_data,...
                     @CTAP_blink2event,...
+                    @CTAP_detect_bad_segments,...
+                    @CTAP_reject_data,...
                     @CTAP_run_ica };
 stepSet(i).id = [num2str(i) '_setup_ICA'];
 
@@ -206,25 +208,28 @@ out.detect_bad_channels = struct(...
      'method', 'given',...
      'badChanCsv', fullfile(Cfg.env.paths.dataRoot, ['badchans_' grp '.txt']));
 
-out.interp_chan = struct('missing_types', 'EEG');
+out.detect_bad_channels(2).method = 'variance';
 
 out.blink2event = struct(...
     'classMethod', 'emgauss_asymmetric');
+
+out.detect_bad_segments = struct(...
+    'coOcurrencePrc', 0.15,... %require 15% chans > AmpLimits
+    'normalEEGAmpLimits', [-150, 150]); %in muV
 
 out.run_ica = struct(...
     'method', 'fastica',...
     'overwrite', true);
 out.run_ica.channels = {'EEG' 'EOG'};
 
+out.interp_chan = struct('missing_types', 'EEG');
+
 
 %% STEPSET 3 - Artefact correction
 i = i+1;  %stepSet 3
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER for non-blinks
-                    @CTAP_detect_bad_comps,... %detect blink related ICs
+                %    @CTAP_detect_bad_comps,... %detect blink related ICs
                     @CTAP_reject_data,...
-                    @CTAP_detect_bad_channels,...%bad channels by Mahalanobis
-                    @CTAP_reject_data,...
-                    @CTAP_interp_chan,...
                     @CTAP_peek_data,... %COMPARISON PEEK POINT!
                     @CTAP_epoch_data,...%bad epochs by 100uV threshold @vertex
                     @CTAP_detect_bad_epochs,...
@@ -232,14 +237,11 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER for non-blinks
 %MAYBEDO - ADD @CTAP_filter_blink_ica AFTER BLINK BAD ICs?
 stepSet(i).id = [num2str(i) '_denoise_epoch'];
 
-out.detect_bad_channels(2).method = 'maha_fast';
-out.detect_bad_channels(2).factorVal = 3;
-
 out.detect_bad_comps = struct(...
-    'method', {'faster' 'recu_blink_tmpl'},...
-    'match_measures', {{'m' 's' 'k' 'h'} ''},...
-    'bounds', {[-3 3] []},...
-    'match_logic', {@any 0});
+    'method', 'faster',...
+    'match_measures', {'m' 's' 'k' 'h', 'e'},...
+    'bounds', [-2.5 2.5],...
+    'match_logic', @any);
 
 out.epoch_data = struct(...
     'method', 'epoch',...
