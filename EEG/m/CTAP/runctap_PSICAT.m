@@ -26,6 +26,8 @@ function ERPS = runctap_PSICAT(varargin)
 % 
 % Varargin
 % 
+%   id          string, an identifier string to append to output base dir
+%               default, ''
 %   proj_root   string, valid path to the data's project base folder, so that:
 %                       <proj_root>/project_PSICAT/PSICAT-data/<group>
 %               Default: '/wrk/group/hipercog/' (dir on ukko2 server)
@@ -62,6 +64,7 @@ data_type = '*.bdf';
 %% Parse input parameters
 p = inputParser;
 
+p.addParameter('id', '', @ischar)
 p.addParameter('proj_root', '/wrk/group/hipercog/', @ischar)
 p.addParameter('group', 'ADHD', @(x) ismember(x, {'ADHD' 'CTRL'}))
 p.addParameter('qcERPloc', '', @ischar)
@@ -77,7 +80,7 @@ Arg = p.Results;
 
 %% Create the CONFIGURATION struct
 % First, define step sets & their parameters in sbf_cfg()
-[Cfg, ctap_args] = sbf_cfg(Arg.proj_root, ctapID...
+[Cfg, ctap_args] = sbf_cfg(Arg.proj_root, [ctapID Arg.id]...
                          , Arg.epoch_evt...
                          , Arg.group...
                          , Arg.set_select);
@@ -230,12 +233,12 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER for non-blinks
 stepSet(i).id = [num2str(i) '_denoise_epoch'];
 
 out.detect_bad_channels(2).method = 'maha_fast';
-out.detect_bad_channels(2).factorVal = 2.8;
+out.detect_bad_channels(2).factorVal = 3;
 
 out.detect_bad_comps = struct(...
     'method', {'faster' 'recu_blink_tmpl'},...
     'match_measures', {{'m' 's' 'k' 'h'} ''},...
-    'bounds', {[-2.75 2.75] []},...
+    'bounds', {[-3 3] []},...
     'match_logic', {@any 0});
 
 out.epoch_data = struct(...
