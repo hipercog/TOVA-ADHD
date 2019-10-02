@@ -228,7 +228,6 @@ out.interp_chan = struct('missing_types', 'EEG');
 %% STEPSET 3 - Artefact correction
 i = i+1;  %stepSet 3
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER for non-blinks
-                %    @CTAP_detect_bad_comps,... %detect blink related ICs
                     @CTAP_reject_data,...
                     @CTAP_peek_data,... %COMPARISON PEEK POINT!
                     @CTAP_epoch_data,...%bad epochs by 100uV threshold @vertex
