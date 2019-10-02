@@ -25,7 +25,7 @@ function ERPS = runctap_PSICAT(varargin)
 %   runctap_PSICAT('proj_root', <some_path>, 'GIX', 1|2)
 %
 % Varargin
-%   id          string, an identifier string to append to output base dir
+%   user        string, an identifier string to append to output base dir
 %               default, ''
 %   proj_root   string, valid path to the data's project base folder, so that:
 %                       <proj_root>/project_PSICAT/PSICAT-data/<group>
@@ -63,7 +63,7 @@ data_type = '*.bdf';
 %% Parse input parameters
 p = inputParser;
 
-p.addParameter('id', '', @ischar)
+p.addParameter('user', '', @ischar)
 p.addParameter('proj_root', '/wrk/group/hipercog/', @ischar)
 p.addParameter('group', 'ADHD', @(x) ismember(x, {'ADHD' 'CTRL'}))
 p.addParameter('qcERPloc', '', @ischar)
@@ -79,9 +79,11 @@ Arg = p.Results;
 
 %% Create the CONFIGURATION struct
 % First, define step sets & their parameters in sbf_cfg()
-[Cfg, ctap_args] = sbf_cfg(Arg.proj_root, ctapID...
+[Cfg, ctap_args] = sbf_cfg(Arg.proj_root...
+                         , ctapID...
+                         , Arg.user...
                          , Arg.epoch_evt...
-                         , [Arg.group Arg.id]...
+                         , Arg.group...
                          , Arg.set_select);
 
 % Next, create measurement config (MC) based on folder, & select subject subset
@@ -122,14 +124,14 @@ end
 
 %% %%%%%%%%%%%%%%%%%%% CONFIGURE ANALYSIS PIPE!! %%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configuration Subfunction
-function [Cfg, out] = sbf_cfg(proj_dir, ID, epoch_evt, grp, runsets)
+function [Cfg, out] = sbf_cfg(proj_dir, ID, user, epoch_evt, grp, runsets)
 
 
 %% Define important directories and files
 Cfg.id = ID;
 Cfg.env.paths.projectRoot = fullfile(proj_dir, ['project_' ID]);
 Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, 'ANALYSIS');
-Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, grp);
+Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, [grp  user]);
 %THIS ONE IS PROBABLY OBSOLETE - Cfg.MC already gives the file locations
 Cfg.env.paths.dataRoot = fullfile(Cfg.env.paths.projectRoot, [ID '-data'], grp);
 
