@@ -1,0 +1,161 @@
+---
+title: "Ex-Gauss for RT data"
+output: html_notebook
+---
+
+```{r message=FALSE}
+library(tidyverse)
+library(retimes)
+library(boot)
+library(broom)
+library(lme4)
+library(lmerTest)
+library(sjPlot)
+
+rtimes <- readRDS('rtimes_data.rds')
+```
+
+
+## Ex-Gaussian distribution parameters  
+Estimating mu, sigma, tau for each participant and condition.  
+mu: mean of Gaussian distribution  
+sigma: SD of Gaussian distribution  
+tau: tail (greater tau -> more long RTs -> positive skew)  
+
+```{r}
+sbj_params_ml <- rtimes %>%
+  group_by(group, Subject, shape, congruency) %>% 
+  summarise(timefit_out = list(data.frame(t(attr(retimes::timefit(TTime),"par"))))) %>%
+                   unnest(cols = c(timefit_out)) %>% ungroup
+```
+
+### Parameter distributions
+```{r fig.width=8, fig.height=8}
+sbj_params_ml %>%
+  gather(var, value, mu:tau) %>%
+  ggplot(aes(value, fill=interaction(congruency, shape))) + 
+  geom_density(alpha=.4) + 
+  facet_wrap(var~group, ncol=2) + theme_bw()
+```
+
+## Fitting lmer with ex-Gaussian parameters 
+```{r}
+sbj_params_ml <- sbj_params_ml %>%
+  mutate(group = relevel(factor(group), ref = "ctrl"),
+         congruency = relevel(factor(congruency), ref = "Congruent"),
+         shape = relevel(factor(shape), ref = "shape"))
+
+options(contrasts = c("contr.sum","contr.poly"))
+```
+### mu
+```{r}
+mmu <- lmer(mu ~ group*shape*congruency + (1|shape:Subject) + (1|congruency:Subject), data=sbj_params_ml)
+summary(mmu)
+plot_model(mmu, type = "diag")[[4]]
+```
+### sigma
+```{r}
+msig <- lmer(sigma ~ group*shape*congruency + (1|shape:Subject) + (1|congruency:Subject), data=sbj_params_ml)
+summary(msig)
+plot_model(msig, type = "diag")[[4]]
+
+```
+
+### tau
+```{r}
+mtau <- lmer(tau ~ group*shape*congruency + (1|shape:Subject) + (1|congruency:Subject), data=sbj_params_ml)
+summary(mtau)
+plot_model(mtau, type = "diag")[[4]]
+
+```
+
+### tau (log model)
+```{r}
+mtau.log <- lmer(log(tau) ~ group*shape*congruency + (1|shape:Subject) + (1|congruency:Subject), data=sbj_params_ml)
+summary(mtau.log)
+plot_model(mtau.log, type = "diag")[[4]]
+```
+
+
+### Plot fixed effects
+```{r}
+new_data <- expand.grid(shape = c('shape', 'nonShape'), 
+                      congruency = c('Congruent', 'InCon'), 
+                      group = c('adhd', 'ctrl'))
+                      
+cbind(new_data, rtime = predict(mmu, newdata = new_data, re.form=NA)) %>%
+  ggplot(aes(congruency, rtime, linetype=group)) + geom_point() + 
+  geom_line(aes(group=group),size=1) +
+  facet_wrap(~shape) + theme_bw() + ggtitle("mu values")
+
+cbind(new_data, rtime = predict(msig, newdata = new_data, re.form=NA)) %>%
+  ggplot(aes(congruency, rtime, linetype=group)) + geom_point() + 
+  geom_line(aes(group=group),size=1) +
+  facet_wrap(~shape) + theme_bw() + ggtitle("sigma values")
+
+cbind(new_data, rtime = predict(mtau, newdata = new_data, re.form=NA)) %>%
+  ggplot(aes(congruency, rtime, linetype=group)) + geom_point() + 
+  geom_line(aes(group=group),size=1) +
+  facet_wrap(~shape) + theme_bw() + ggtitle("tau values")
+
+cbind(new_data, rtime = predict(mtau.log, newdata = new_data, re.form=NA)) %>%
+  ggplot(aes(congruency, exp(rtime), linetype=group)) + geom_point() + 
+  geom_line(aes(group=group),size=1) +
+  facet_wrap(~shape) + theme_bw() + ggtitle("tau values (log model)")
+
+```
+
+
+### Pairwise comparisons
+Here for main effects only  
+```{r}
+difflsmeans(mmu, c("congruency", "shape", "group"))
+difflsmeans(msig, c("congruency", "shape", "group"))
+difflsmeans(mtau, c("congruency", "shape", "group"))
+difflsmeans(mtau.log, c("congruency", "shape", "group"))
+
+```
+
+### Bootstrapping lmer estimates
+
+```{r}
+bootstrap.estimates <- function(model) {
+  cb <- bootMer(model, FUN=fixef, nsim=1000 #.progress = "txt", PBargs = list(style=3)
+                )
+  cb
+}
+#cb$t %>% data.frame() %>%
+#  gather(var, value) %>%
+#  ggplot(aes(value)) + geom_density() + facet_wrap(~var, scales = "free_x")
+
+bootstrap.estimate.plot <- function(cb, model) {
+  boot_ci <- lapply(2:8, function(b) boot.ci(cb, type = "perc", index=b)$percent)
+
+  ci <- do.call(rbind, boot_ci)
+  td <- tidy(model)[2:8,]  
+  td$conf.low <- ci[, 4]
+  td$conf.high <- ci[, 5]
+
+  g <- ggplot(td, aes(term, estimate)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width=.1) + coord_flip() +
+    geom_hline(aes(yintercept=0), linetype= "longdash") + theme_bw()
+  g
+
+}
+```
+
+
+```{r}
+ 
+cb.mmu <- bootstrap.estimates(mmu)
+cb.msig <- bootstrap.estimates(msig)
+cb.mtau <- bootstrap.estimates(mtau)
+cb.mtau.log <- bootstrap.estimates(mtau.log)
+
+bootstrap.estimate.plot(cb.mmu, mmu)
+bootstrap.estimate.plot(cb.msig, msig)
+bootstrap.estimate.plot(cb.mtau, mtau)
+bootstrap.estimate.plot(cb.mtau.log, mtau.log)
+
+```
