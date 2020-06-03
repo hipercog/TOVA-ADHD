@@ -13,8 +13,12 @@ library(broom)
 library(lme4)
 library(lmerTest)
 library(sjPlot)
+library(emmeans)
+library(multcomp)
 
-rtimes <- readRDS('rtimes_data.rds')
+
+
+rtimes <- readRDS(file.path('data', 'rtimes_data.rds'))
 ```
 
 

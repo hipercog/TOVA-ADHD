@@ -1,3 +1,20 @@
+# Create text that can be added to ggplot LM ablines
+# function to create the text equation
+lm_eqn <- function(df, lm_object) {
+  eq <-
+    substitute(
+      italic(y) == a + b %.% italic(x) * "," ~  ~ italic(r) ^ 2 ~ "=" ~ r2,
+      list(
+        a = format(coef(lm_object)[1], digits = 2),
+        b = format(coef(lm_object)[2], digits = 2),
+        r2 = format(summary(lm_object)$r.squared, digits = 3),
+        digits = 2
+      )
+    )
+  as.character(as.expression(eq))
+}
+
+
 # VISUALIZING CLUSTERS IN 2D
 # From https://www.r-bloggers.com/visualizing-clusters/
 
