@@ -1,4 +1,9 @@
 function [EEG, varargout] = parseTOVAevents(EEG, varargin)
+% PARSETOVAEVENTS parses TOVA events! Currently only works for TOVA data loaded
+% with pop_biosig, as ctap_readbdf doesn't find events
+% Note: varargin and varargout are dummies to support interface with CTAP
+% pipeline
+
 
 varargout{1} = '';
 full_codes = {'TOVA test START' 'NON-TARGET' 'TARGET' 'RESPONSE' 'undefined'};
@@ -34,7 +39,7 @@ sbf_find_meta_event_pairs(trigs(3), metas{4})
 
 %% report distribution info, change types to strings
 for i = 1:numel(C)
-    if i < 5, idx = i; else idx = 5; end
+    if i < 5, idx = i; else, idx = 5; end
     fprintf('%d==%s (new code=''%s''), occurs %d times\n'...
         , C(i), full_codes{idx}, codes{idx}, sum(ic == i))
     logidx = find(evtypes == C(i));
