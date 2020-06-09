@@ -1,15 +1,22 @@
 function [EEG, varargout] = parseTOVAevents(EEG, varargin)
 % PARSETOVAEVENTS parses TOVA events! Currently only works for TOVA data loaded
 % with pop_biosig, as ctap_readbdf doesn't find events
-% Note: varargin and varargout are dummies to support interface with CTAP
-% pipeline
 
-
+% Note: varargout is dummy to support interface with CTAP pipeline
 varargout{1} = '';
+
+%% Init
 full_codes = {'TOVA test START' 'NON-TARGET' 'TARGET' 'RESPONSE' 'undefined'};
 codes = {'STRT' 'NONT' 'TRGT' 'RESP' 'UNDF'};
 trigs = [65528 65529 65531 65532];
 metas = {'COM' 'cor_rsp' 'cor_inb' 'OM'};
+
+% check EEG.event.type, convert to numeric if char
+if all(cellfun(@ischar, {EEG.event.type})) && ...
+    all(cellfun(@(x) ~isempty(str2double(x)), {EEG.event.type}))
+    tmp = num2cell(str2double({EEG.event.type}));
+    [EEG.event.type] = tmp{:};
+end
 evtypes = [EEG.event.type];
 [C, ~, ic] = unique(evtypes);
 if any(~ismember(trigs(2:4), C))

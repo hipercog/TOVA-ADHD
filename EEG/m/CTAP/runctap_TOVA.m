@@ -35,7 +35,7 @@ function ERPS = runctap_TOVA(varargin)
 %               Default: ADHD
 %   qcERPloc    string, if not null, run QC grand average ERP on this electrode
 %               Default: ''
-%   set_select  [1 n] | 'all', keyword 'all' selects all stepSets, or use index
+%   getsets     [1 n] | 'all', keyword 'all' selects all stepSets, or use index
 %               Default: 'all'
 %   sbj_filt    [1 n] | 'all', keyword 'all' for all, or some index of subjects
 %               Default: 'all'
@@ -60,9 +60,9 @@ p = inputParser;
 p.addParameter('user', '', @ischar)
 p.addParameter('proj_root', '/wrk/group/hipercog/', @ischar)
 p.addParameter('group', 'Control', @(x) ismember(x, {'Control' 'Intake' 'Outtake'}))
-p.addParameter('set_select', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
+p.addParameter('getsets', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
 p.addParameter('sbj_filt', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
-p.addParameter('qcERPloc', 'A1', @ischar)
+p.addParameter('qcERPloc', '', @ischar)
 p.addParameter('overwrite', true, @islogical)
 p.addParameter('debug', false, @islogical)
 
@@ -76,7 +76,7 @@ Arg = p.Results;
                          , ctapID...
                          , Arg.user...
                          , Arg.group...
-                         , Arg.set_select);
+                         , Arg.getsets);
 
 % Next, create measurement config (MC) based on folder, & select subject subset
 Cfg = get_meas_cfg_MC(Cfg, Cfg.env.paths.dataRoot...
@@ -205,15 +205,15 @@ stepSet(i).id = [num2str(i) '_SUBSET_PEEK_CHANS_ICA'];
 % ICA can take ages -> hence a cut here
 
 out.select_evdata = struct(...
-    'evtype', 'TOVAtest');
-%     'covertype', 'total',...
+    'evtype', 'TOVAtest',...
+    'covertype', 'own');
 %     'duration', [-2000 2000]);
 
 out.peek_data = struct(...
+    'numpeeks', 20,...
     'secs', [10 30],... %start few seconds after data starts
     'peekStats', true,... %get statistics for each peek!
     'overwrite', false,...
-    'plotAllPeeks', false,...
     'savePeekData', false,...
     'savePeekICA', false);
 

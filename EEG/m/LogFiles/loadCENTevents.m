@@ -1,4 +1,4 @@
-function EEG = loadCENTevents(EEG, log_src, varargin)
+function [EEG, varargout] = loadCENTevents(EEG, varargin)
 % LOADCENTEVENTS loads events from CENT style Pres log files to eeglab data
 %
 %   DESCRIPTION:
@@ -11,12 +11,12 @@ function EEG = loadCENTevents(EEG, log_src, varargin)
 %
 % Inputs:
 %   EEG             struct, EEG struct to process
-%   log_src         string, directory containing, or full path to, log file
+%
+% Varargin
+%   'src'           string, directory containing, or full path to, log file
 %                           If empty string is passed, 'log_src' will be set
 %                           equal to directory of original EEG file, obtained
 %                           from 'EEG.comments' field
-%
-% Varargin
 %   'mkplot'        logical, plot interpolation of event times
 %                   Default: false
 %   'name'          string, 
@@ -36,18 +36,22 @@ function EEG = loadCENTevents(EEG, log_src, varargin)
 % Copyright 2014- Benjamin Cowley, benjamin.cowley@ttl.fi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Note: varargout is dummy to support interface with CTAP pipeline
+varargout{1} = '';
 
 %% Parse input
 p = inputParser;
 p.KeepUnmatched = true;
 
 p.addRequired('EEG', @isstruct)
-p.addRequired('log_src', @ischar)
 
+p.addParameter('src', '', @ischar)
 p.addParameter('mkplot', false, @islogical)
 
-p.parse(EEG, log_src, varargin{:});
+p.parse(EEG, varargin{:});
 Arg = p.Results;
+
+log_src = Arg.src;
 
 
 %% Get the log file source and naming data for the EEG
