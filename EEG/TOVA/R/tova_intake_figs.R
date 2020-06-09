@@ -49,6 +49,8 @@ ggsave(file.path(odir, "rtv_ss_h2.svg"))
 
 
 # Plot after time x group comparisons - COMERRH1, COMERRH2, OMERRH1, OMERRH2, DPRIMEH1, DPRIMEH2
+
+# First dataframe includes all DVs but they don't filter to same subset so are handled individually below
 # dfl <-
 #   df %>% select(1:8, contains("OMSSH") | starts_with("DPRSSH")) %>% 
 #   pivot_longer(cols = ends_with(c("H1", "H2")), 
