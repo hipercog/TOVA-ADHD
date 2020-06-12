@@ -1,8 +1,11 @@
 ---
 title: "CENT LC analysis"
 author: "Ben Cowley"
-date: "19/05/2017"
-output: html_document
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  html_document:
+    toc: true
+    theme: united
 ---
 
 <!-- When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this: -->
@@ -161,10 +164,11 @@ However, pruning out sessions with 1 trial results in losing quite a lot of data
 Session data for calculating session LCs is defined as the median of trial-wise scores per session.
 
 ```{r parse session data, echo=FALSE, warning=FALSE}
+summary_method = "median"
 
-sn.nor <- getSSN(tr.nor0, DV) # Normal sessions only
-sn.inv <- getSSN(tr.inv0, DV) # Inverse trials only
-sn.tra <- getSSN(tr.tra0, DV) # transfer trials only
+sn.nor <- getSSN(tr.nor0, DV, summary_method) # Normal sessions only
+sn.inv <- getSSN(tr.inv0, DV, summary_method) # Inverse trials only
+sn.tra <- getSSN(tr.tra0, DV, summary_method) # transfer trials only
 
 
 # Print summary of ALL trials in ALL categories with single-trial sessions removed
@@ -183,10 +187,10 @@ The first part of MonoLC is the Kendall rank-correlation of session number with 
 
 ```{r session Mono LC, echo=FALSE, warning=FALSE}
 # BY SESSIONS: Kendall correlations of daily session adjusted score with session number
-ssn.trl.MLC <- getSsnMLC(trials, DV)
-ssn.nor.MLC <- getSsnMLC(tr.nor0, DV)
-ssn.inv.MLC <- getSsnMLC(tr.inv0, DV)
-ssn.tra.MLC <- getSsnMLC(tr.tra0, DV)
+ssn.trl.MLC <- getSsnMLC(trials, DV, summary_method)
+ssn.nor.MLC <- getSsnMLC(tr.nor0, DV, summary_method)
+ssn.inv.MLC <- getSsnMLC(tr.inv0, DV, summary_method)
+ssn.tra.MLC <- getSsnMLC(tr.tra0, DV, summary_method)
 ```
 
 "ssn.trl.MLC" = monotonic LC for sessions including ALL trial data:
@@ -278,13 +282,20 @@ summary(MLC.tra$aggMLC)
 ```
 
 
-## Measuring trial-wise _ideal_  LC
+## Measuring trial-wise _Skill Acquisition_  LC
+The preferred hypothetical learning curve follows Fitt's model (REF - see Edua's theory text 07.06.2017). Our choice of Fitt's model is printed below. The choice of model impacts the testing outcomes very strongly.
 
-Working again with the Trial-wise MonoLC vector, we reduce it to a scalar value by taking the cosine similarity of each vector and an equal-length vector representing a hypothetical ideal learning curve. For example, a vector of 1s represents the hypothetical performance where trial-wise scores increased monotonically consistently across all sessions. The preferred hypothetical learning curve follows Fitt's model (REF - see Edua's theory text 07.06.2017), and therefore has three phases. Thus the smallest possible number of sessions is three, and for this reason some more subjects will be pruned in the sparse transfer trial data, because they have only two or one session with >1 transfer trial.
-This causes problems for aggregating or comparing the datasets, as you cannot create, e.g., a correlation matrix of unequal-sized vectors.
+Fitt's model has three phases. Thus the smallest possible number of sessions is three, and for this reason some more subjects will be pruned in the sparse transfer trial data, because they have only two or one session with >1 transfer trial. This causes problems for aggregating or comparing the datasets, as you cannot create, e.g., a correlation matrix of unequal-sized vectors.
 Cosine similarity ranges from 1 to -1.
 
-```{r IDEAL LC, echo=FALSE, warning=FALSE}
+### Fitts model for monotone improvement
+
+Working again with the Trial-wise MonoLC vector, we reduce it to a scalar value by taking the cosine similarity of each vector and an equal-length vector representing a hypothetical ideal learning curve. For example, a vector of 1s represents the hypothetical performance where trial-wise scores increased monotonically consistently across all sessions.
+
+```{r Fitts monotone LC, echo=FALSE, warning=FALSE}
+FITTs <- c(0, 1, 0.5)
+print(paste("Fitt's model for monotone improvement = ", toString(FITTs)))
+
 # Kendall correlations of per-trial adjusted score with order - Kendall is used for small N
 trial.cors <- getTrialCors(trials, DV, corvar)
 tr.nor.cor <- getTrialCors(tr.nor, DV, corvar)
@@ -292,10 +303,10 @@ tr.inv.cor <- getTrialCors(tr.inv, DV, corvar)
 tr.tra.cor <- getTrialCors(tr.tra, DV, corvar)
 
 # IDEAL: cosine similarity of trial cors to an arbitrary hypothetical LC (AHLC)
-IdealLC <- getTrialCosSim(trial.cors[,-(1)], trial.cors[,1], AHLC = "Fitts")
-ILC.nor <- getTrialCosSim(tr.nor.cor[,-(1)], tr.nor.cor[,1], AHLC = "Fitts")
-ILC.inv <- getTrialCosSim(tr.inv.cor[,-(1)], tr.inv.cor[,1], AHLC = "Fitts")
-ILC.tra <- getTrialCosSim(tr.tra.cor[,-(1)], tr.tra.cor[,1], AHLC = "Fitts")
+IdealLC <- getTrialCosSim(trial.cors[,-(1)], trial.cors[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.nor <- getTrialCosSim(tr.nor.cor[,-(1)], tr.nor.cor[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.inv <- getTrialCosSim(tr.inv.cor[,-(1)], tr.inv.cor[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.tra <- getTrialCosSim(tr.tra.cor[,-(1)], tr.tra.cor[,1], AHLC = "Fitts", phase123 = FITTs)
 ```
 
 "IdealLC" = ideal LC for ALL trials data:
@@ -318,6 +329,25 @@ summary(ILC.inv[,2])
 summary(ILC.tra[,2])
 ```
 
+
+### Fitts model for geometric mean score
+
+```{r Fitts geom mean LC, echo=FALSE, warning=FALSE}
+FITTs <- c(-0.5, 0, 0.5)
+print(paste("Fitt's model for geometric mean score = ", toString(FITTs)))
+
+# centered to 0, scaled to [-1..1], geometric mean scores per session
+trial.scor <- getTrialCSGmean(trials, DV)
+tr.nor.scr <- getTrialCSGmean(tr.nor, DV)
+tr.inv.scr <- getTrialCSGmean(tr.inv, DV)
+tr.tra.scr <- getTrialCSGmean(tr.tra, DV)
+
+# IDEAL: cosine similarity of trial cors to an arbitrary hypothetical LC (AHLC)
+IdealLC <- getTrialCosSim(trial.scor[,-(1)], trial.scor[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.nor <- getTrialCosSim(tr.nor.scr[,-(1)], tr.nor.scr[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.inv <- getTrialCosSim(tr.inv.scr[,-(1)], tr.inv.scr[,1], AHLC = "Fitts", phase123 = FITTs)
+ILC.tra <- getTrialCosSim(tr.tra.scr[,-(1)], tr.tra.scr[,1], AHLC = "Fitts", phase123 = FITTs)
+```
 
 
 ## Examine  _monotonic_ and _ideal_ LCs
@@ -456,15 +486,36 @@ for (idx in 1:2)
 
 ### Testing Monotonic LC
 
-Here we fit a linear regression model to Monotonic LCs, testing the interaction of protocol (TB, SMR) by sex. The first model reported is ANOVA; this is just included to illustrate similarity of results. Then a linear model is fitted to each training mode (normal, inverse, transfer) separately; and to the LC for all modes together. Finally tests are performed for monotonic LCs from session data and trial data separately.
+First, we want to know whether the group-wise Monotonic LC distribution was significantly biased, i.e. does the LC represent a consistent pattern of change across the group (do they improve)? The LC is based on calculations of Kendall's tau. Under the null hypothesis of independence of X and Y, the sampling distribution of tau has an expected value of zero. Thus, group-wise null hypothesis can be that the distribution of LCs has a mean value close to zero. Because we have a small sample, we will not assume that the LC has a normal distribution, but instead use Wilcoxon's non-parametric test.
+
+```{r test Monotonic LC significance, echo=FALSE, warning=FALSE}
+wilcox.test(MonoLC[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(MLC.nor[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(MLC.inv[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(MLC.tra[,2], exact = TRUE, conf.int = TRUE)
+
+```
+
+Here we fit a linear regression model to Monotonic LCs to test the effect of protocol (TB, SMR). We also test the interaction of protocol by sex. A linear model is fitted to the LC for all modes together; and to each training mode (normal, inverse, transfer) separately. 
+
+Finally the 8th and 10th tests are performed for monotonic LCs from session data and trial data separately.
 
 __NOTE__: In total, for MonoLCs and IdealLCs, there are ten linear models reported, thus a very simple mental correction for multiplicity (equivalent to Bonferroni) can be performed by moving the decimal point one place right.
 
 ```{r Linear models of Monotonic LCs vs protocol * sex, echo=FALSE, warning=FALSE}
 # MONOTONIC LEARNING
-aov.MLC <- aov(MonoLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
-summary(aov.MLC)
+lm.MLC <- lm(MonoLC[,2] ~ nfb$TB.1.SMR1)
+summary(lm.MLC)
+lm.MLC.nor <- lm(MLC.nor[,2] ~ nfb$TB.1.SMR1)
+summary(lm.MLC.nor)
+lm.MLC.inv <- lm(MLC.inv[,2] ~ nfb$TB.1.SMR1)
+summary(lm.MLC.inv)
+idx <- nfb$Part_number %in% MLC.tra[,1]
+lm.MLC.tra <- lm(MLC.tra[,2] ~ nfb[idx,]$TB.1.SMR1)
+summary(lm.MLC.tra)
 
+lm.MLC <- lm(MonoLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
+summary(lm.MLC)
 lm.MLC.nor <- lm(MLC.nor[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
 summary(lm.MLC.nor)
 lm.MLC.inv <- lm(MLC.inv[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
@@ -473,8 +524,6 @@ idx <- nfb$Part_number %in% MLC.tra[,1]
 lm.MLC.tra <- lm(MLC.tra[,2] ~ nfb[idx,]$TB.1.SMR1 * nfb[idx,]$Female.2.Male2)
 summary(lm.MLC.tra)
 
-lm.MLC <- lm(MonoLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
-summary(lm.MLC)
 lm.ssn.MLC <- lm(ssn.trl.MLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
 summary(lm.ssn.MLC)
 lm.trials.MLC <- lm(trials.MLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
@@ -484,14 +533,33 @@ summary(lm.trials.MLC)
 
 ### Testing Ideal LC
 
-Next we fit linear regression models to the Ideal LCs; again ANOVA is reported first for comparison. Each training mode is then tested separately, finishing with data from all modes together. 
+We also test whether the group-wise Ideal LC distribution was significantly biased, i.e. do they learn a skill? As before, we use Wilcoxon's non-parametric test.
+
+```{r test Ideal LC significance, echo=FALSE, warning=FALSE}
+wilcox.test(IdealLC[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(ILC.nor[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(ILC.inv[,2], exact = TRUE, conf.int = TRUE)
+wilcox.test(ILC.tra[,2], exact = TRUE, conf.int = TRUE)
+
+```
+
+Next we fit linear regression models to the Ideal LCs. First four are effect of protocol only, next four are interaction effect of protocol x sex. Data from all modes is tested together, then each training mode is tested separately.
 
 
 ```{r Linear models of Ideal LCs vs protocol * sex, echo=FALSE, warning=FALSE}
 # IDEAL LEARNING
-aov.ILC <- aov(IdealLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
-summary(aov.ILC)
+lm.ILC <- lm(IdealLC[,2] ~ nfb$TB.1.SMR1)
+summary(lm.ILC)
+lm.ILC.nor <- lm(ILC.nor[,2] ~ nfb$TB.1.SMR1)
+summary(lm.ILC.nor)
+lm.ILC.inv <- lm(ILC.inv[,2] ~ nfb$TB.1.SMR1)
+summary(lm.ILC.inv)
+idx <- nfb$Part_number %in% ILC.tra[,1]
+lm.ILC.tra <- lm(ILC.tra[,2] ~ nfb[idx,]$TB.1.SMR1)
+summary(lm.ILC.tra)
 
+lm.ILC <- lm(IdealLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
+summary(lm.ILC)
 lm.ILC.nor <- lm(ILC.nor[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
 summary(lm.ILC.nor)
 lm.ILC.inv <- lm(ILC.inv[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
@@ -499,9 +567,6 @@ summary(lm.ILC.inv)
 idx <- nfb$Part_number %in% ILC.tra[,1]
 lm.ILC.tra <- lm(ILC.tra[,2] ~ nfb[idx,]$TB.1.SMR1 * nfb[idx,]$Female.2.Male2)
 summary(lm.ILC.tra)
-
-lm.ILC <- lm(IdealLC[,2] ~ nfb$TB.1.SMR1 * nfb$Female.2.Male2)
-summary(lm.ILC)
 ```
 
 

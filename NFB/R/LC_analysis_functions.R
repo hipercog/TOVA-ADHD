@@ -53,15 +53,19 @@ getSSN <- function(df, DV, summary_method = "median")
   return(ssn)
 }
 
-getSsnMLC <- function(df, DV, ...)
+getSsnMLC <- function(df, DV, precomp = FALSE, ...)
 {
-  ssn <- getSSN(df, DV, ...)
+  if (precomp){
+    ssn <- df
+  }else{
+    ssn <- getSSN(df, DV, ...)
+  }
   
   ssn.MLC <- setDT(ssn)[
-    , .(cors = cor(get(DV), nom_session, use="pair", method="k"))
+    , .(cors = cor(get(DV), session, use="pair", method="k"))
     , by = patient]$cors
   
-  ssn.count <- ssn %>% group_by(patient) %>% summarise(ssn.count = max(nom_session))
+  ssn.count <- ssn %>% group_by(patient) %>% summarise(ssn.count = max(session))
   
   return(cbind(ssn.count[,1], ssn.MLC, ssn.count[,2]))
 }
@@ -78,9 +82,9 @@ getTrialAggCor <- function(mtx, corx, cory, id = TRUE)
     id <- trial.cors[,1]
     trial.cors <- trial.cors[,-(1)]
   }
-  ret.agg <- apply(abind(trial.cors, trial.count, rev.along = 0), 1, agg.rank.cors)
+  agg.cor <- apply(abind(trial.cors, trial.count, rev.along = 0), 1, agg.rank.cors)
   
-  return(as.data.frame(cbind(id, ret.agg, ssn.count)))
+  return(as.data.frame(cbind(id, agg.cor, ssn.count)))
 }
 
 aggMLC <- function(tr, sn, fill = FALSE)
@@ -105,14 +109,14 @@ aggMLC <- function(tr, sn, fill = FALSE)
   return(as.data.frame(aggMLC))
 }
 
-getTrialCosSim <- function(trial.cors, labels, AHLC = "Fitts")
+getTrialCosSim <- function(trial.cors, labels, AHLC = "Fitts", phase123 = c(0, 1, 0.5))
 {
   # BY TRIALS: cosine similarity of trial cors to an arbitrary hypothetical LC (AHLC)
   N <- ncol(trial.cors)
   # AHLC by linear increment from 0 to 1
   if (AHLC == "Fitts")
   {
-    phase123 <- c(-0.5, 1, 0)
+    # phase123 <- c(0, 1, 0.5)
     one3rd <- ceiling(N / 3)
     arhyLC <- c(rep(phase123[1], one3rd), rep(phase123[2], one3rd), rep(phase123[3], one3rd))[2:(N+1)]
     min.ssn <- 3
@@ -145,6 +149,33 @@ getTrialCors <- function(df, X, Y, id = TRUE)
     tr.cors <- tr.cors[,-(1)]
   }
   return(tr.cors)
+}
+
+getTrialCSGmean <- function(df, X, id = TRUE, cs = '-1to1')
+{
+  require(data.table)
+  tr.gmean <- as.matrix(spread(
+    setDT(df)[
+      , .(geom_mean = gm_mean(x = get(X)))
+      , by = .(patient, nom_session)]
+      , nom_session, `geom_mean`))
+  # center and scale
+  tmp <- tr.gmean[,-(1)]
+  if (cs == '-1to1')
+  {
+    tmp <- t(apply(tmp, 1, center_scale)) #center_scale is from znbnUtils.R
+  }else if (cs == 'SD'){
+    tmp <- apply(tmp, 1, scale)
+  }
+  tr.gmean[,-(1)] <- tmp
+  # apply column names & remove patient ID column if requested
+  # rownames(tr.gmean) <- c('patient', X)
+  if (!id)
+  {
+    subset(tr.gmean, select = -c('patient'))
+  }
+  
+  return(tr.gmean)
 }
 
 getTrialCount <- function(df, id = TRUE)
@@ -258,3 +289,10 @@ getTraTrials <- function(df, ...)
   return(traTrials)
 }
 
+### Not-inverse trials ----
+getNotInvTrials <- function(df, ...)
+{
+  notiTrials <- droplevels(subset(df, norm_notInv==1))
+  notiTrials <- tidyTrials(notiTrials, ...)
+  return(notiTrials)
+}

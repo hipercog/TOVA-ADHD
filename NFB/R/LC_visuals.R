@@ -14,8 +14,64 @@ bwrcol <- colorRampPalette(c('#F0AA00','#00A0BE','#003C78'))
 bwrcol <- colorRampPalette(c('#00A0BE','#F0AA00'))
 
 
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ---
+## ## ## ## ## ---- Plot LCs in log-log space with linear regression line, showing power law fit ----
+ggplot(dsl, aes(x=log(session_num), y=log(adj_score), color=hrs_since_sleep)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="green", high="red") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "hours awake")
 
-#### EXPLORATION PLOTS ----
+library(standardize)
+dsl$TBR.n <- scale_by(TB_ratio ~ patient, data=dsl)
+ggplot(dsl, aes(x=log(session_num), y=log(adj_score), color=TBR.n)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="green", high="red") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "z(TB ratio)")
+
+dsl.smr$TBR.n <- scale_by((theta_base / beta_base) ~ patient, data=dsl.smr)
+ggplot(dsl.smr, aes(x=log(session_num), y=log(adj_score), color=TBR.n)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="red", high="green") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "z(TB ratio)")
+
+dsl.tb$TBR.n <- scale_by((theta_base / beta_base) ~ patient, data=dsl.tb)
+ggplot(dsl.tb, aes(x=log(session_num), y=log(adj_score), color=TBR.n)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="red", high="green") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "z(TB ratio)")
+
+dsl$theta.n <- scale_by(theta_base ~ patient, data=dsl)
+ggplot(dsl, aes(x=log(session_num), y=log(adj_score), color=theta.n)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="red", high="green") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "z(theta BL)")
+
+dsl$beta.n <- scale_by(beta_base ~ patient, data=dsl)
+ggplot(dsl, aes(x=log(session_num), y=log(adj_score), color=beta.n)) + 
+  geom_jitter(alpha=0.4) +
+  geom_smooth(method="lm", formula=y~x, se=F, alpha=0.8, linetype="dashed", size = 0.5) +
+  scale_color_gradient(low="green", high="red") +
+  facet_wrap(~patient) +
+  theme_bw() +
+  labs(x = "log(session#)", y = "log(adjusted score)", color = "z(beta BL)")
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ---
+## ## ## ## ## ---------------------  EXPLORATION PLOTS ----
 df <- as.data.frame(cbind(MonoLC[,2], IdealLC[,2], 
                           MLC.nor[,2], ILC.nor[,2], 
                           MLC.inv[,2], ILC.inv[,2],
@@ -99,6 +155,7 @@ boxplot(LC[idx,] ~ nfb$Gender..1.F..2.M. * nfb$TB.1.SMR1, main = paste(ttl[idx],
 par(mfrow=c(2,2))
 plot_meanCI(allT$M[[group_by_var]], allT$M[[agregate_var]], allT$CI, "sessions, all trials", agg_var_str, c(3, 2, 5))
 plot_meanCI(norT$M[[group_by_var]], norT$M[[agregate_var]], norT$CI, "sessions, normal trials", agg_var_str, c(3, 2, 5))
+plot_meanCI(notT$M[[group_by_var]], notT$M[[agregate_var]], notT$CI, "sessions, normal trials", agg_var_str, c(3, 2, 5))
 plot_meanCI(invT$M[[group_by_var]], invT$M[[agregate_var]], invT$CI, "sessions, inverse trials", agg_var_str, c(3, 2, 5))
 plot_meanCI(traT$M[[group_by_var]], traT$M[[agregate_var]], traT$CI, "sessions, transfer trials", agg_var_str, c(3, 2, 5))
 
