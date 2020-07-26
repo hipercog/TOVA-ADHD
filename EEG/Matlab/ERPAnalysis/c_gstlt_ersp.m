@@ -1,5 +1,5 @@
 function sig=c_gstlt_ersp(ALLEEG,chidx,outdir,conds)
-% C_GSTLT_ERPS ersp analysis of CENT gestalt protocol data, by conditions
+% C_GSTLT_ERSP ersp analysis of CENT gestalt protocol data, by conditions
 % INPUT:
 %   - 
 
