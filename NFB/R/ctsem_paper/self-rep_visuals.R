@@ -4,23 +4,74 @@ library(ggplot2)
 library(viridis)
 library(hrbrthemes)
 library(RColorBrewer)
-source('R/znbnz_visuals.R')
+source('R/znbnVisuals.R')
 
-odir <- "/home/bcowley/Dropbox/project_CENT/Publications/WIP - NFB Learning Curves/Figures/"
+odir <- "/home/ben/Dropbox/project_CENT/Publications/WIP - NFB Learning Curves/Figures"
 
 colv <- brewer.pal(n = 12, name = "Paired")
 
 #---- FIGURE FOR DES x LC SLOPE
-dat <- read.csv(file.path('data', 'DESxLC.csv'), sep = '\t')
+des <- read.csv(file.path('data', 'ctsem_paper', 'DESxLC.csv'), sep = '\t')
+dat <- read.csv(file.path('data', 'ctsem_paper', 'selfrepXLC.csv'))
 
+
+## BIS x LC ----
+eqn <- lm_eqn(dat, lm(slope.score ~ BIS, data = dat))
+eqTB <- lm_eqn(dat, lm(slope.score ~ BIS, data = filter(dat, regime == "TBR")))
+eqSM <- lm_eqn(dat, lm(slope.score ~ BIS, data = filter(dat, regime == "SMR")))
+
+ggplot(dat, aes(x = BIS, y = slope.score)) +
+  geom_point(aes(pch = regime)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  ylim(-0.25, 0.6) +
+  annotate("text",
+           x = max(dat$BIS),
+           y = max(dat$slope.score),
+           hjust = 1,
+           label = eqn,
+           parse = TRUE) +
+  theme_minimal()
+ggsave(file.path(odir, "LCxBIS.svg"))
+
+ggplot(dat, aes(x = BIS, y = slope.score, color = learner)) +
+  geom_point(aes(pch = learner)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  scale_colour_manual(values = colv[c(1, 2)]) +
+  theme_minimal()
+
+ggplot(dat, aes(x = BIS, y = slope.score, color = regime)) +
+  geom_point(aes(pch = regime)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  ylim(-0.25, 0.7) +
+  scale_colour_manual(values = colv[c(9, 10)]) +
+  annotate("text",
+           x = max(dat$BIS),
+           y = max(dat$slope.score) + 0.17,
+           hjust = 1,
+           label = eqSM,
+           parse = TRUE, 
+           color = colv[9]) +
+  annotate("text",
+           x = max(dat$BIS),
+           y = max(dat$slope.score) + 0.1,
+           hjust = 1,
+           label = eqTB,
+           parse = TRUE, 
+           color = colv[10]) +
+  theme_minimal()
+ggsave(file.path(odir, "LCxBISxRegime.svg"))
+
+
+## DES x LC ----
 eqn <- lm_eqn(dat, lm(slope.score ~ DES, data = dat))
-eqTB <- lm_eqn(dat, lm(slope.score ~ DES, data = filter(dat, regime == "TB")))
+eqTB <- lm_eqn(dat, lm(slope.score ~ DES, data = filter(dat, regime == "TBR")))
 eqSM <- lm_eqn(dat, lm(slope.score ~ DES, data = filter(dat, regime == "SMR")))
-eqLR <- lm_eqn(dat, lm(slope.score ~ DES, data = filter(dat, learner == "Learner")))
-eqNL <- lm_eqn(dat, lm(slope.score ~ DES, data = filter(dat, learner == "Non-Learner")))
 
 ggplot(dat, aes(x = DES, y = slope.score)) +
-  geom_point(aes(pch = dat$regime)) +
+  geom_point(aes(pch = regime)) +
   geom_smooth(method = "lm") +
   ylab("Slope of learning curve") +
   ylim(-0.25, 0.6) +
@@ -31,51 +82,91 @@ ggplot(dat, aes(x = DES, y = slope.score)) +
            label = eqn,
            parse = TRUE) +
   theme_minimal()
-ggsave(paste0(odir, "LCxDES.svg"))
-
-ggplot(dat, aes(x = DES, y = slope.score, color = regime)) +
-  geom_point(aes(pch = dat$regime)) +
-  geom_smooth(method = "lm") +
-  ylab("Slope of learning curve") +
-  ylim(-0.25, 0.6) +
-  scale_colour_manual(values = colv[c(9, 10)]) +
-  annotate("text",
-           x = max(dat$DES),
-           y = max(dat$slope.score) + 0.07,
-           hjust = 1,
-           label = eqTB,
-           parse = TRUE) +
-  annotate("text",
-           x = max(dat$DES),
-           y = max(dat$slope.score),
-           hjust = 1,
-           label = eqSM,
-           parse = TRUE) +
-  theme_minimal()
-ggsave(paste0(odir, "LCxDESxRegime.svg"))
+ggsave(file.path(odir, "LCxDES.svg"))
 
 ggplot(dat, aes(x = DES, y = slope.score, color = learner)) +
-  geom_point(aes(pch = dat$learner)) +
+  geom_point(aes(pch = learner)) +
   geom_smooth(method = "lm") +
   ylab("Slope of learning curve") +
-  ylim(-0.25, 0.6) +
+  scale_colour_manual(values = colv[c(1, 2)]) +
+  theme_minimal()
+
+ggplot(dat, aes(x = DES, y = slope.score, color = regime)) +
+  geom_point(aes(pch = regime)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  ylim(-0.25, 0.7) +
   scale_colour_manual(values = colv[c(9, 10)]) +
   annotate("text",
            x = max(dat$DES),
-           y = max(dat$slope.score) + 0.07,
+           y = max(dat$slope.score) + 0.17,
            hjust = 1,
-           label = eqLR,
-           parse = TRUE) +
+           label = eqSM,
+           parse = TRUE, 
+           color = colv[9]) +
   annotate("text",
            x = max(dat$DES),
+           y = max(dat$slope.score) + 0.1,
+           hjust = 1,
+           label = eqTB,
+           parse = TRUE, 
+           color = colv[10]) +
+  theme_minimal()
+ggsave(file.path(odir, "LCxDESxRegime.svg"))
+
+
+## GAD x LC ----
+eqn <- lm_eqn(dat, lm(slope.score ~ GAD, data = dat))
+eqTB <- lm_eqn(dat, lm(slope.score ~ GAD, data = filter(dat, regime == "TBR")))
+eqSM <- lm_eqn(dat, lm(slope.score ~ GAD, data = filter(dat, regime == "SMR")))
+
+ggplot(dat, aes(x = GAD, y = slope.score)) +
+  geom_point(aes(pch = regime)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  ylim(-0.25, 0.6) +
+  annotate("text",
+           x = max(dat$GAD),
            y = max(dat$slope.score),
            hjust = 1,
-           label = eqNL,
+           label = eqn,
            parse = TRUE) +
   theme_minimal()
-ggsave(paste0(odir, "LCxDESxLearner.svg"))
+ggsave(file.path(odir, "LCxGAD.svg"))
 
-#---- FIGURE FOR ASRS x LEARNER STATUS
+ggplot(dat, aes(x = GAD, y = slope.score, color = learner)) +
+  geom_point(aes(pch = learner)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  scale_colour_manual(values = colv[c(1, 2)]) +
+  theme_minimal()
+
+ggplot(dat, aes(x = GAD, y = slope.score, color = regime)) +
+  geom_point(aes(pch = regime)) +
+  geom_smooth(method = "lm") +
+  ylab("Slope of learning curve") +
+  ylim(-0.25, 0.7) +
+  scale_colour_manual(values = colv[c(9, 10)]) +
+  annotate("text",
+           x = max(dat$GAD),
+           y = max(dat$slope.score) + 0.17,
+           hjust = 1,
+           label = eqSM,
+           parse = TRUE, 
+           color = colv[9]) +
+  annotate("text",
+           x = max(dat$GAD),
+           y = max(dat$slope.score) + 0.1,
+           hjust = 1,
+           label = eqTB,
+           parse = TRUE, 
+           color = colv[10]) +
+  theme_minimal()
+ggsave(file.path(odir, "LCxGADxRegime.svg"))
+
+
+
+#---- FIGURE FOR ASRS x LEARNER STATUS ----
 dat <- read.csv(file.path('data', 'ASRSxLC.csv'), sep = '\t')
 df <- dat %>%
   pivot_longer(cols = contains(c("inattention", "hyper")), names_to = "ASRS")
