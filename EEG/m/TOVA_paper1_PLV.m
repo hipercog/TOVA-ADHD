@@ -46,51 +46,66 @@ filtSpec.order = 300;
 nbootci = 100;
 
 % calculate PLV & bootstrap 95% CIs of sliding windows...
-sldngwdws = cell(1, 9);
 wdwinc = 100;
 wdwstarts = -200:wdwinc:600;
+sldngwdws = cell(numel(wdwstarts));
 
 for sw = 1:numel(sldngwdws)
     tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
     % calculate PLV & bootstrap 95% CIs of whole epoch...
-    [Cplv, CplvCI] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-    [Aplv, AplvCI] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
+    [Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
+    [Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
 
     % ...and for +/- median RT
-    [CloRTplv, CloRTplvCI] = sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-    [ChiRTplv, ChiRTplvCI] = sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-    [AloRTplv, AloRTplvCI] = sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-    [AhiRTplv, AhiRTplvCI] = sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-    sldngwdws{sw} = {Cplv, CplvCI, Aplv, AplvCI...
-                , CloRTplv, CloRTplvCI, ChiRTplv, ChiRTplvCI...
-                , AloRTplv, AloRTplvCI, AhiRTplv, AhiRTplvCI};
+    [CloRTplv, CloRTplvCI, CloTime] = ...
+                        sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
+    [ChiRTplv, ChiRTplvCI, ChiTime] = ...
+                        sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
+    [AloRTplv, AloRTplvCI, AloTime] = ...
+                        sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
+    [AhiRTplv, AhiRTplvCI, AhiTime] = ...
+                        sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
+    sldngwdws{sw} = {Cplv, CplvCI, Ctime
+                     Aplv, AplvCI, Atime
+                     CloRTplv, CloRTplvCI, CloTime
+                     ChiRTplv, ChiRTplvCI, ChiTime
+                	 AloRTplv, AloRTplvCI, AloTime
+                     AhiRTplv, AhiRTplvCI, AhiTime};
 end
 
 tms = [-200 800];
 
 % calculate PLV & bootstrap 95% CIs of whole epoch...
-[Cplv, CplvCI] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-[Aplv, AplvCI] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
+[Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
+[Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
 
 % ...and for +/- median RT
-[CloRTplv, CloRTplvCI] = sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-[ChiRTplv, ChiRTplvCI] = sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-[AloRTplv, AloRTplvCI] = sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-[AhiRTplv, AhiRTplvCI] = sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
+[CloRTplv, CloRTplvCI, CloTime] = ...
+                    sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
+[ChiRTplv, ChiRTplvCI, ChiTime] = ...
+                    sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
+[AloRTplv, AloRTplvCI, AloTime] = ...
+                    sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
+[AhiRTplv, AhiRTplvCI, AhiTime] = ...
+                    sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
 
 
-sldngwdws{end + 1} = {Cplv, CplvCI, Aplv, AplvCI...
-			, CloRTplv, CloRTplvCI, ChiRTplv, ChiRTplvCI...
-			, AloRTplv, AloRTplvCI, AhiRTplv, AhiRTplvCI};
+sldngwdws{end + 1} = {Cplv, CplvCI, Ctime
+                     Aplv, AplvCI, Atime
+                     CloRTplv, CloRTplvCI, CloTime
+                     ChiRTplv, ChiRTplvCI, ChiTime
+                	 AloRTplv, AloRTplvCI, AloTime
+                     AhiRTplv, AhiRTplvCI, AhiTime};
 
 save(fullfile(oud, ['PLV' num2str(now) '.mat']), 'sldngwdws', '-v7.3')
 
 
-function [plv, plvCI] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
+function [plv, plvCI, plvTime] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
 
     t1 = max(millis(1) - filtSpec.order, eeg.xmin * 1000);
     t2 = min(millis(2) + filtSpec.order, eeg.xmax * 1000);
     calcseg = find(eeg.times >= t1, 1) : find(eeg.times <= t2, 1, 'last');
+    plvTime = eeg.times(calcseg);
 
     bootrep = {'' sprintf(' (with 95%% CIs from %d bootstraps)', nbootci)};
     fprintf('%s%s for %s;\nCalc segment:%d..%dms to extract:%d..%dms\n'...
@@ -107,4 +122,5 @@ function [plv, plvCI] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
     if ~isempty(CI)
         plvCI = CI(use1:use2, :, :, :);
     end
+    plvTime = plvTime(use1:use2);
 end

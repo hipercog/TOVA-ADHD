@@ -323,96 +323,115 @@ filtSpec.range = [6 10];
 filtSpec.order = 300;
 nbootci = 100;
 
-sldngwdws = cell(1, 9);
 wdwinc = 100;
-wdwstarts = -100:wdwinc:200;
+wdwstarts = -200:wdwinc:600;
+sldngwdws = cell(3, 6, numel(wdwstarts));
 
 for sw = 1:numel(sldngwdws)
     tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
     % calculate PLV & bootstrap 95% CIs of whole epoch...
-    [Cplv, CplvCI] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-    [Aplv, AplvCI] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
+    [Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
+    [Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
 
     % ...and for +/- median RT
-    [CloRTplv, CloRTplvCI] = sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-    [ChiRTplv, ChiRTplvCI] = sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-    [AloRTplv, AloRTplvCI] = sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-    [AhiRTplv, AhiRTplvCI] = sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-    sldngwdws{sw} = {Cplv, CplvCI, Aplv, AplvCI...
-                , CloRTplv, CloRTplvCI, ChiRTplv, ChiRTplvCI...
-                , AloRTplv, AloRTplvCI, AhiRTplv, AhiRTplvCI};
+    [CloRTplv, CloRTplvCI, CloTime] = ...
+                        sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
+    [ChiRTplv, ChiRTplvCI, ChiTime] = ...
+                        sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
+    [AloRTplv, AloRTplvCI, AloTime] = ...
+                        sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
+    [AhiRTplv, AhiRTplvCI, AhiTime] = ...
+                        sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
+    sldngwdws{sw} = {Cplv, CplvCI, Ctime
+                     Aplv, AplvCI, Atime
+                     CloRTplv, CloRTplvCI, CloTime
+                     ChiRTplv, ChiRTplvCI, ChiTime
+                	 AloRTplv, AloRTplvCI, AloTime
+                     AhiRTplv, AhiRTplvCI, AhiTime};
 end
 
 tms = [-200 800];
 
 % calculate PLV & bootstrap 95% CIs of whole epoch...
-[Cplv, CplvCI] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-[Aplv, AplvCI] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
+[Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
+[Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
 
 % ...and for +/- median RT
-[CloRTplv, CloRTplvCI] = sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-[ChiRTplv, ChiRTplvCI] = sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-[AloRTplv, AloRTplvCI] = sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-[AhiRTplv, AhiRTplvCI] = sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
+[CloRTplv, CloRTplvCI, CloTime] = ...
+                    sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
+[ChiRTplv, ChiRTplvCI, ChiTime] = ...
+                    sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
+[AloRTplv, AloRTplvCI, AloTime] = ...
+                    sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
+[AhiRTplv, AhiRTplvCI, AhiTime] = ...
+                    sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
 
+sldngwdws{end + 1} = {Cplv, CplvCI, Ctime
+                     Aplv, AplvCI, Atime
+                     CloRTplv, CloRTplvCI, CloTime
+                     ChiRTplv, ChiRTplvCI, ChiTime
+                	 AloRTplv, AloRTplvCI, AloTime
+                     AhiRTplv, AhiRTplvCI, AhiTime};
 
 
 %% Stat testing - replace ANOVA with...? bootstrap?
-
-mnCplv = squeeze(mean(Cplv));
-mnAplv = squeeze(mean(Aplv));
-
-% Indexing
-[conIx(:, 1), conIx(:, 2)] = ind2sub(size(mnCplv), find(mnCplv));
-
-pPLV = zeros(1, size(conIx, 1));
-for t = 1:size(conIx, 1)
-    tst = [Cplv(:, conIx(t, 1), conIx(t, 2)) Aplv(:, conIx(t, 1), conIx(t, 2))];
-    conNm = [tx{conIx(t, 1)} '_' tx{conIx(t, 2)}];
-    [pPLV(t), testPLV.(conNm), statsPLV.(conNm)] = anova1(tst, grp, 'off');
-end
-pPLV = mafdr(pPLV);
+% 
+% mnCplv = squeeze(mean(Cplv));
+% mnAplv = squeeze(mean(Aplv));
+% 
+% % Indexing
+% [conIx(:, 1), conIx(:, 2)] = ind2sub(size(mnCplv), find(mnCplv));
+% 
+% pPLV = zeros(1, size(conIx, 1));
+% for t = 1:size(conIx, 1)
+%     tst = [Cplv(:, conIx(t, 1), conIx(t, 2)) Aplv(:, conIx(t, 1), conIx(t, 2))];
+%     conNm = [tx{conIx(t, 1)} '_' tx{conIx(t, 2)}];
+%     [pPLV(t), testPLV.(conNm), statsPLV.(conNm)] = anova1(tst, grp, 'off');
+% end
+% pPLV = mafdr(pPLV);
 
 
 %% PLV time course plots
-% rows = 9;
-% cols = 9;
-% dsg = find(cEEG.times > tms(1), 1) + 1 : find(cEEG.times <= tms(2), 1, 'last');
-% lgnd = '';
-% pltix = zeros(9, 9);
-% pltix(1:81) = 1:81;
-% pltix = pltix';
-% 
-% figh = figure('Position', lbwh, 'Color', 'w');
-% 
-% for p = 1:size(conIx, 1)
-%     
-%     subplot(rows, cols, pltix(conIx(p, 1), conIx(p, 2) - 1))
-% %     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
-% %     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
+rows = 9;
+cols = 9;
+dsg = find(cEEG.times > tms(1), 1) + 1 : find(cEEG.times <= tms(2), 1, 'last');
+lgnd = '';
+pltix = zeros(9, 9);
+pltix(1:81) = 1:81;
+pltix = pltix';
+
+figh = figure('Position', lbwh, 'Color', 'w');
+
+for p = 1:size(conIx, 1)
+    
+    subplot(rows, cols, pltix(conIx(p, 1), conIx(p, 2) - 1))
+%     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
+%     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
 %     cCIs = [CplvCI(:, conIx(p, 1), conIx(p, 2), 1) CplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
 %     aCIs = [AplvCI(:, conIx(p, 1), conIx(p, 2), 1) AplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
-%     sh=plot([cCIs aCIs]);
-% %     sh = ctap_plot_basic_erp(erp', find(cEEG.times(dsg) == 0), cEEG.srate...
-% %                     , 'timeunit', 'ms'...
-% %                     , 'overploterp', CIs'...
-% %                     , 'lgnd', lgnd...
-% %                     , 'lgndloc', 'southeast');
-% % %                     , 'ylimits', [0.15 0.9]...
-%     if p == size(conIx, 1) - 1
-% %         lgnd = {'Ctrl PLV' 'ADHD PLV' 'Ctrl CI1' 'Ctrl CI2'};
-% %         lgnd = {'Ctrl:rt<md' 'Ctrl:rt>md' 'ADHD:rt<md' 'ADHD:rt>md'};
-%     end
-%     if p < size(conIx, 1)
-%         xlabel(''); xticklabels({});
-%     else
-%         xlabel('Time (ms)')%; xtickangle(sh, 45)
-%         legend({'Ctrl CI1' 'Ctrl CI2' 'ADHD CI1' 'ADHD CI2'})
-%     end
-%     if p == 1, ylabel('PLV'); else, ylabel(''); end
-%     title([tx{conIx(p, 1)} '<>' tx{conIx(p, 2)}])
-%         % ', p=' num2str(round(pPLV(i), 4), 4)]);
-% end
+    cCIs = [CloRTplvCI(:, conIx(p, 1), conIx(p, 2), 1) CloRTplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
+    aCIs = [ChiRTplvCI(:, conIx(p, 1), conIx(p, 2), 1) ChiRTplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
+    sh=plot([cCIs aCIs]);
+%     sh = ctap_plot_basic_erp(erp', find(cEEG.times(dsg) == 0), cEEG.srate...
+%                     , 'timeunit', 'ms'...
+%                     , 'overploterp', CIs'...
+%                     , 'lgnd', lgnd...
+%                     , 'lgndloc', 'southeast');
+% %                     , 'ylimits', [0.15 0.9]...
+    if p == size(conIx, 1) - 1
+%         lgnd = {'Ctrl PLV' 'ADHD PLV' 'Ctrl CI1' 'Ctrl CI2'};
+%         lgnd = {'Ctrl:rt<md' 'Ctrl:rt>md' 'ADHD:rt<md' 'ADHD:rt>md'};
+    end
+    if p < size(conIx, 1)
+        xlabel(''); xticklabels({});
+    else
+        xlabel('Time (ms)')%; xtickangle(sh, 45)
+        legend({'Ctrl CI1' 'Ctrl CI2' 'ADHD CI1' 'ADHD CI2'})
+    end
+    if p == 1, ylabel('PLV'); else, ylabel(''); end
+    title([tx{conIx(p, 1)} '<>' tx{conIx(p, 2)}])
+        % ', p=' num2str(round(pPLV(i), 4), 4)]);
+end
 
 
 %% PLV plotting
@@ -602,28 +621,13 @@ function fh = sbf_erpim2x2(eegA, eegB...
     sgtitle(ttl)
 end
 
-
-% function plv = sbf_bootci_plv(dat, eeg, ms1, ms2, filtSpec)
-% 
-%     dat = shiftdim(dat, 1);
-%     pad = filtSpec.order;
-%     t1 = max(times(1) - pad, eeg.xmin * 1000);
-%     t2 = min(times(2) + pad, eeg.xmax * 1000);
-%     calcseg = find(eeg.times >= t1, 1) : find(eeg.times <= t2, 1, 'last');
-% 
-%     % calculate PLV
-%     calcCplv = eegPLV(dat(:, calcseg, :), eeg.srate, filtSpec);
-%     
-%     use1 = find(eeg.times >= ms1, 1) - calcseg(1) + 1;
-%     use2 = (((ms2 - ms1) / 1000) * eeg.srate) + use1 - 1;
-%     plv = calcCplv(use1:use2, :, :);
-% end
-
-function [plv, plvCI] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
+%
+function [plv, plvCI, plvTime] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
 
     t1 = max(millis(1) - filtSpec.order, eeg.xmin * 1000);
     t2 = min(millis(2) + filtSpec.order, eeg.xmax * 1000);
     calcseg = find(eeg.times >= t1, 1) : find(eeg.times <= t2, 1, 'last');
+    plvTime = eeg.times(calcseg);
 
     bootrep = {'' sprintf(' (with 95%% CIs from %d bootstraps)', nbootci)};
     fprintf('%s%s for %s;\nCalc segment:%d..%dms to extract:%d..%dms\n'...
@@ -640,6 +644,7 @@ function [plv, plvCI] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
     if ~isempty(CI)
         plvCI = CI(use1:use2, :, :, :);
     end
+    plvTime = plvTime(use1:use2);
 end
 
 % TODO - FINISH CONVERTING TO STANDALONE, AND FIX TO LOOP OVER GIVEN WINDOWS
