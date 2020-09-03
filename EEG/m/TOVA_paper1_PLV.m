@@ -79,6 +79,13 @@ tms = [-200 800];
 [AhiRTplv, AhiRTplvCI] = sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
 
 
+sldngwdws{end + 1} = {Cplv, CplvCI, Aplv, AplvCI...
+			, CloRTplv, CloRTplvCI, ChiRTplv, ChiRTplvCI...
+			, AloRTplv, AloRTplvCI, AhiRTplv, AhiRTplvCI};
+
+save(fullfile(oud, ['PLV' num2str(now) '.mat']), 'sldngwdws', '-v7.3')
+
+
 function [plv, plvCI] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
 
     t1 = max(millis(1) - filtSpec.order, eeg.xmin * 1000);
