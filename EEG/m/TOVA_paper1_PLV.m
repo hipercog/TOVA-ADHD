@@ -48,7 +48,7 @@ nbootci = 1000;
 % calculate PLV & bootstrap 95% CIs of sliding windows...
 wdwinc = 100;
 wdwstarts = -200:wdwinc:600;
-sldngwdws = cell(numel(wdwstarts));
+sldngwdws = cell(1, numel(wdwstarts));
 
 parfor sw = 1:numel(sldngwdws)
     tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
