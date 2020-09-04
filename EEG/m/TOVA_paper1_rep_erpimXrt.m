@@ -435,6 +435,11 @@ end
 
 
 %% PLV plotting
+swidx = 2;
+Cplv = sldngwdws{swidx}{7};
+Aplv = sldngwdws{swidx}{11};
+mnCplv = squeeze(mean(Cplv));
+mnAplv = squeeze(mean(Aplv));
 tstPLV = (mnCplv - mnAplv);
 mxdff = max(abs(tstPLV), [], 'all');
 tstPLV = (tstPLV + mxdff) / (2 * mxdff);
@@ -471,7 +476,7 @@ title(grp{2}); xticks(1:10); xticklabels(tx); yticklabels(tx);
 
 cb = colorbar('EastOutside');
 cb.Limits = [cmpN cmpN*2];
-cb.Ticks = [cmpN:64:cmpN*2];
+cb.Ticks = cmpN:64:cmpN*2;
 cb.TickLabels = round((cb.Ticks - cmpN) ./ cmpN, 2);
 cb.Title.String = 'PLV';
 

@@ -43,14 +43,14 @@ roi = sort([ROI{1, :}]);
 tx = biosemi1020(roi);
 filtSpec.range = [6 10];
 filtSpec.order = 300;
-nbootci = 100;
+nbootci = 1000;
 
 % calculate PLV & bootstrap 95% CIs of sliding windows...
 wdwinc = 100;
 wdwstarts = -200:wdwinc:600;
 sldngwdws = cell(numel(wdwstarts));
 
-for sw = 1:numel(sldngwdws)
+parfor sw = 1:numel(sldngwdws)
     tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
     % calculate PLV & bootstrap 95% CIs of whole epoch...
     [Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
