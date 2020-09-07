@@ -56,7 +56,7 @@ for e = 1:numel(eegns)
     wdwstarts = -200:wdwinc:600;
     sldngwdws = cell(1, numel(wdwstarts) + 1);
 
-    parfor sw = 1:numel(sldngwdws)
+    parfor sw = 1:numel(wdwstarts)
         tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
         [plv, plvCI, times] = sbf_get_plv(eeg, roi, tms, filtSpec, nbootci);
         sldngwdws{sw} = {plv, plvCI, times};
