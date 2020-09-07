@@ -470,6 +470,10 @@ subplot(2, 3, 1)
 im = image(mnCplv .* cmpN + cmpN);
 title(grp{1}); xticks(1:10); xticklabels(tx); yticklabels(tx);
 
+cb = colorbar('EastOutside');
+cb.Title.String = 'remove me!';
+delete(cb)
+
 subplot(2, 3, 2)
 image(mnAplv .* cmpN + cmpN)
 title(grp{2}); xticks(1:10); xticklabels(tx); yticklabels(tx);
@@ -509,7 +513,7 @@ topoplot_connect(Tds, chlocs, 'colormap', cmap, 'showlabels', 1)
 tightfig
 svnm = 'TOVA-PLV-response-nu';
 % svnm = 'TOVA-PLV-response-topo';
-print(gcf, '-dpng', fullfile(oud, 'erpimXrt', svnm))
+print(gcf, '-dpng', fullfile(oud, 'PLV', svnm))
 
 
 %% Topoplot the neg+pos peaks

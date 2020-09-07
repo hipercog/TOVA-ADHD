@@ -21,11 +21,11 @@ cEEG = pop_loadset('filepath', ind...
 aEEG = pop_loadset('filepath', ind...
                  , 'filename', 'ADHD_MERGED_randomised_COR_RSP_TOTAL.set');
 
-% epoch aligned to RT
-ix = [cEEG.event(ismember({cEEG.event.type}, 'cor_rsp')).duration] > 600;
-cEEGrt = pop_epoch(pop_select(cEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
-ix = [aEEG.event(ismember({aEEG.event.type}, 'cor_rsp')).duration] > 600;
-aEEGrt = pop_epoch(pop_select(aEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
+% % epoch aligned to RT
+% ix = [cEEG.event(ismember({cEEG.event.type}, 'cor_rsp')).duration] > 600;
+% cEEGrt = pop_epoch(pop_select(cEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
+% ix = [aEEG.event(ismember({aEEG.event.type}, 'cor_rsp')).duration] > 600;
+% aEEGrt = pop_epoch(pop_select(aEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
 
 % Subset by median RT
 Crts = eeg_getepochevent(cEEG, {'cor_rsp'}, [], 'duration');
@@ -37,6 +37,8 @@ idx = Arts < median(Arts);
 aEEGloRT = pop_select(aEEG, 'trial', find(idx));
 aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
 
+eegns = {'cEEG' 'aEEG' 'cEEGloRT' 'cEEGhiRT' 'aEEGloRT' 'aEEGhiRT'};
+
 
 % Phase-locking tests
 roi = sort([ROI{1, :}]);
@@ -44,60 +46,32 @@ tx = biosemi1020(roi);
 filtSpec.range = [6 10];
 filtSpec.order = 300;
 nbootci = 1000;
-
-% calculate PLV & bootstrap 95% CIs of sliding windows...
 wdwinc = 100;
-wdwstarts = -200:wdwinc:600;
-sldngwdws = cell(1, numel(wdwstarts));
 
-parfor sw = 1:numel(sldngwdws)
-    tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
+for e = 1:numel(eegns)
+    
+    eeg = eval(eegns{e});
+    
+    % calculate PLV & bootstrap 95% CIs of sliding windows...
+    wdwstarts = -200:wdwinc:600;
+    sldngwdws = cell(1, numel(wdwstarts) + 1);
+
+    parfor sw = 1:numel(sldngwdws)
+        tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
+        [plv, plvCI, times] = sbf_get_plv(eeg, roi, tms, filtSpec, nbootci);
+        sldngwdws{sw} = {plv, plvCI, times};
+    end
+
+    tms = [-200 800];
+
     % calculate PLV & bootstrap 95% CIs of whole epoch...
-    [Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-    [Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
+    [plv, plvCI, times] = sbf_get_plv(eeg, roi, tms, filtSpec, nbootci);
 
-    % ...and for +/- median RT
-    [CloRTplv, CloRTplvCI, CloTime] = ...
-                        sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-    [ChiRTplv, ChiRTplvCI, ChiTime] = ...
-                        sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-    [AloRTplv, AloRTplvCI, AloTime] = ...
-                        sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-    [AhiRTplv, AhiRTplvCI, AhiTime] = ...
-                        sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-    sldngwdws{sw} = {Cplv, CplvCI, Ctime
-                     Aplv, AplvCI, Atime
-                     CloRTplv, CloRTplvCI, CloTime
-                     ChiRTplv, ChiRTplvCI, ChiTime
-                	 AloRTplv, AloRTplvCI, AloTime
-                     AhiRTplv, AhiRTplvCI, AhiTime};
+    sldngwdws{end} = {plv, plvCI, times};
+
+    svnm = [eegns{e} '_PLV_' num2str(now) '.mat'];
+    save(fullfile(oud, svnm), 'sldngwdws', '-v7.3')
 end
-
-tms = [-200 800];
-
-% calculate PLV & bootstrap 95% CIs of whole epoch...
-[Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-[Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
-
-% ...and for +/- median RT
-[CloRTplv, CloRTplvCI, CloTime] = ...
-                    sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-[ChiRTplv, ChiRTplvCI, ChiTime] = ...
-                    sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-[AloRTplv, AloRTplvCI, AloTime] = ...
-                    sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-[AhiRTplv, AhiRTplvCI, AhiTime] = ...
-                    sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-
-
-sldngwdws{end + 1} = {Cplv, CplvCI, Ctime
-                     Aplv, AplvCI, Atime
-                     CloRTplv, CloRTplvCI, CloTime
-                     ChiRTplv, ChiRTplvCI, ChiTime
-                	 AloRTplv, AloRTplvCI, AloTime
-                     AhiRTplv, AhiRTplvCI, AhiTime};
-
-save(fullfile(oud, ['PLV' num2str(now) '.mat']), 'sldngwdws', '-v7.3')
 
 
 function [plv, plvCI, plvTime] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
