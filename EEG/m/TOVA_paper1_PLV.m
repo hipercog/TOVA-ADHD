@@ -1,18 +1,13 @@
 % ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
 ind = '/wrk/group/hipercog/project_TOVA/ANALYSIS/paper1';
-% oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extended_anal';
+% oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal';
 oud = '/wrk/group/hipercog/project_TOVA/ANALYSIS/paper1/PLV';
 
 ROI = {[7 19 36 21 15 23 28] [68 85 100]
         'parieto-occipital' 'frontal'};
-grp = {'Control' 'ADHD'};
-cnd = {'' 'rt'
-    'Target-locked' 'Response-locked'};
-
-lbwh = get(0,'ScreenSize');
-clrmp = {'greytight'
-'whatjet(''what'', [0.9 0.9 0.9], ''stops'', [0 0.15 0.25 0.1 0.1 0.25 0.15])'};
-cmap = eval(clrmp{2, 1});
+roi = sort([ROI{1, :}]);
+tx = biosemi1020(roi);
+eegns = {'cEEG' 'aEEG' 'cEEGloRT' 'cEEGhiRT' 'aEEGloRT' 'aEEGhiRT'};
 
 
 % LOAD CORRECT RESPONSE DATA
@@ -37,18 +32,14 @@ idx = Arts < median(Arts);
 aEEGloRT = pop_select(aEEG, 'trial', find(idx));
 aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
 
-eegns = {'cEEG' 'aEEG' 'cEEGloRT' 'cEEGhiRT' 'aEEGloRT' 'aEEGhiRT'};
-
 
 % Phase-locking tests
-roi = sort([ROI{1, :}]);
-tx = biosemi1020(roi);
 filtSpec.range = [6 10];
 filtSpec.order = 300;
 nbootci = 1000;
 wdwinc = 100;
 
-for e = 1:numel(eegns)
+for e = 4:numel(eegns)
     
     eeg = eval(eegns{e});
     

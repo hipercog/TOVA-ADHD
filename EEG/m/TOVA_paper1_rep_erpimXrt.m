@@ -1,6 +1,6 @@
 ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
 % ind = '/wrk/group/hipercog/project_TOVA/ANALYSIS/paper1';
-oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extended_anal';
+oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal';
 % oud = '/wrk/group/hipercog/project_TOVA/ANALYSIS/paper1/PLV';
 
 ROI = {[7 19 36 21 15 23 28] [68 85 100]
@@ -34,6 +34,16 @@ aEEGrt = pop_epoch(pop_select(aEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
 %     , 'nlines', 4100, 'smoothing', 285, 'recompute', 'on'...
 %     , 'sorttype', 'cor_rsp', 'sortfield', 'duration'...
 %     , 'fileout', fullfile(oud, attl));
+
+%% Split data by median response time, for..?
+Crts = eeg_getepochevent(cEEG, {'cor_rsp'}, [], 'duration');
+idx = Crts < median(Crts);
+cEEGloRT = pop_select(cEEG, 'trial', find(idx));
+cEEGhiRT = pop_select(cEEG, 'trial', find(~idx));
+Arts = eeg_getepochevent(aEEG, {'cor_rsp'}, [], 'duration');
+idx = Arts < median(Arts);
+aEEGloRT = pop_select(aEEG, 'trial', find(idx));
+aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
 
 
 %% TESTING: test negative and positive peaks around RT
@@ -293,229 +303,6 @@ print(fh, '-dpng', fullfile(oud, 'erpimXrt', 'TOVA-ERPIMxRT'))
 close
 
 
-%% erp, src, pnts, zeropt, srate, tkoffset, lgnd, ttl, savename
-% fh = ctap_plot_basic_erp(...
-%     AvCerp, find(cEEGrt.times == 0), cEEGrt.srate...
-%     , 'waves', AvCsrc...
-%     , 'lgnd', {'Control' 'ADHD'}...
-%     , 'ttl', ttl...
-%     , 'vlines', tstwn...
-%     , 'cmap', cmap);
-% 
-% print(fh, '-dsvg', fullfile(oud, 'erpimXrt', ttl))
-
-
-Crts = eeg_getepochevent(cEEG, {'cor_rsp'}, [], 'duration');
-idx = Crts < median(Crts);
-cEEGloRT = pop_select(cEEG, 'trial', find(idx));
-cEEGhiRT = pop_select(cEEG, 'trial', find(~idx));
-Arts = eeg_getepochevent(aEEG, {'cor_rsp'}, [], 'duration');
-idx = Arts < median(Arts);
-aEEGloRT = pop_select(aEEG, 'trial', find(idx));
-aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
-
-
-%% Phase-locking tests
-% INIT VARS
-roi = sort([ROI{1, :}]);
-tx = biosemi1020(roi);
-filtSpec.range = [6 10];
-filtSpec.order = 300;
-nbootci = 100;
-
-wdwinc = 100;
-wdwstarts = -200:wdwinc:600;
-sldngwdws = cell(3, 6, numel(wdwstarts));
-
-for sw = 1:numel(sldngwdws)
-    tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
-    % calculate PLV & bootstrap 95% CIs of whole epoch...
-    [Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-    [Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
-
-    % ...and for +/- median RT
-    [CloRTplv, CloRTplvCI, CloTime] = ...
-                        sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-    [ChiRTplv, ChiRTplvCI, ChiTime] = ...
-                        sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-    [AloRTplv, AloRTplvCI, AloTime] = ...
-                        sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-    [AhiRTplv, AhiRTplvCI, AhiTime] = ...
-                        sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-    sldngwdws{sw} = {Cplv, CplvCI, Ctime
-                     Aplv, AplvCI, Atime
-                     CloRTplv, CloRTplvCI, CloTime
-                     ChiRTplv, ChiRTplvCI, ChiTime
-                	 AloRTplv, AloRTplvCI, AloTime
-                     AhiRTplv, AhiRTplvCI, AhiTime};
-end
-
-tms = [-200 800];
-
-% calculate PLV & bootstrap 95% CIs of whole epoch...
-[Cplv, CplvCI, Ctime] = sbf_get_plv(cEEG, roi, tms, filtSpec, nbootci);
-[Aplv, AplvCI, Atime] = sbf_get_plv(aEEG, roi, tms, filtSpec, nbootci);
-
-% ...and for +/- median RT
-[CloRTplv, CloRTplvCI, CloTime] = ...
-                    sbf_get_plv(cEEGloRT, roi, tms, filtSpec, nbootci);
-[ChiRTplv, ChiRTplvCI, ChiTime] = ...
-                    sbf_get_plv(cEEGhiRT, roi, tms, filtSpec, nbootci);
-[AloRTplv, AloRTplvCI, AloTime] = ...
-                    sbf_get_plv(aEEGloRT, roi, tms, filtSpec, nbootci);
-[AhiRTplv, AhiRTplvCI, AhiTime] = ...
-                    sbf_get_plv(aEEGhiRT, roi, tms, filtSpec, nbootci);
-
-sldngwdws{end + 1} = {Cplv, CplvCI, Ctime
-                     Aplv, AplvCI, Atime
-                     CloRTplv, CloRTplvCI, CloTime
-                     ChiRTplv, ChiRTplvCI, ChiTime
-                	 AloRTplv, AloRTplvCI, AloTime
-                     AhiRTplv, AhiRTplvCI, AhiTime};
-
-
-%% Stat testing - replace ANOVA with...? bootstrap?
-% 
-% mnCplv = squeeze(mean(Cplv));
-% mnAplv = squeeze(mean(Aplv));
-% 
-% % Indexing
-% [conIx(:, 1), conIx(:, 2)] = ind2sub(size(mnCplv), find(mnCplv));
-% 
-% pPLV = zeros(1, size(conIx, 1));
-% for t = 1:size(conIx, 1)
-%     tst = [Cplv(:, conIx(t, 1), conIx(t, 2)) Aplv(:, conIx(t, 1), conIx(t, 2))];
-%     conNm = [tx{conIx(t, 1)} '_' tx{conIx(t, 2)}];
-%     [pPLV(t), testPLV.(conNm), statsPLV.(conNm)] = anova1(tst, grp, 'off');
-% end
-% pPLV = mafdr(pPLV);
-
-
-%% PLV time course plots
-rows = 9;
-cols = 9;
-dsg = find(cEEG.times > tms(1), 1) + 1 : find(cEEG.times <= tms(2), 1, 'last');
-lgnd = '';
-pltix = zeros(9, 9);
-pltix(1:81) = 1:81;
-pltix = pltix';
-
-figh = figure('Position', lbwh, 'Color', 'w');
-
-for p = 1:size(conIx, 1)
-    
-    subplot(rows, cols, pltix(conIx(p, 1), conIx(p, 2) - 1))
-%     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
-%     erp = [Cplv(:, conIx(i, 1), conIx(i, 2)) Aplv(:, conIx(i, 1), conIx(i, 2))];
-%     cCIs = [CplvCI(:, conIx(p, 1), conIx(p, 2), 1) CplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
-%     aCIs = [AplvCI(:, conIx(p, 1), conIx(p, 2), 1) AplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
-    cCIs = [CloRTplvCI(:, conIx(p, 1), conIx(p, 2), 1) CloRTplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
-    aCIs = [ChiRTplvCI(:, conIx(p, 1), conIx(p, 2), 1) ChiRTplvCI(:, conIx(p, 1), conIx(p, 2), 2)];
-    sh=plot([cCIs aCIs]);
-%     sh = ctap_plot_basic_erp(erp', find(cEEG.times(dsg) == 0), cEEG.srate...
-%                     , 'timeunit', 'ms'...
-%                     , 'overploterp', CIs'...
-%                     , 'lgnd', lgnd...
-%                     , 'lgndloc', 'southeast');
-% %                     , 'ylimits', [0.15 0.9]...
-    if p == size(conIx, 1) - 1
-%         lgnd = {'Ctrl PLV' 'ADHD PLV' 'Ctrl CI1' 'Ctrl CI2'};
-%         lgnd = {'Ctrl:rt<md' 'Ctrl:rt>md' 'ADHD:rt<md' 'ADHD:rt>md'};
-    end
-    if p < size(conIx, 1)
-        xlabel(''); xticklabels({});
-    else
-        xlabel('Time (ms)')%; xtickangle(sh, 45)
-        legend({'Ctrl CI1' 'Ctrl CI2' 'ADHD CI1' 'ADHD CI2'})
-    end
-    if p == 1, ylabel('PLV'); else, ylabel(''); end
-    title([tx{conIx(p, 1)} '<>' tx{conIx(p, 2)}])
-        % ', p=' num2str(round(pPLV(i), 4), 4)]);
-end
-
-
-%% PLV plotting
-swidx = 2;
-Cplv = sldngwdws{swidx}{7};
-Aplv = sldngwdws{swidx}{11};
-mnCplv = squeeze(mean(Cplv));
-mnAplv = squeeze(mean(Aplv));
-tstPLV = (mnCplv - mnAplv);
-mxdff = max(abs(tstPLV), [], 'all');
-tstPLV = (tstPLV + mxdff) / (2 * mxdff);
-plvlim = [min(cat(3, mnCplv, mnAplv), [], 'all')...
-          max(cat(3, mnCplv, mnAplv), [], 'all')];
-
-%topoplot_connect structures
-Cds.chanPairs = conIx;
-Cds.connectStrength = mnCplv(mnCplv > 0);
-Cds.connectStrengthLimits = [0 1];%plvlim;
-
-Ads.chanPairs = conIx;
-Ads.connectStrength = mnAplv(mnAplv > 0);
-Ads.connectStrengthLimits = [0 1];%plvlim;
-
-Tds.chanPairs = conIx;
-Tds.connectStrength = tstPLV(tstPLV ~= 0.5);
-Tds.connectStrengthLimits = [0 1];%[min(pPLV) max(pPLV)];
-
-% and figure
-figure('Position', lbwh, 'Color', 'w')%[lbwh(1:3) lbwh(4) * 0.5])
-
-colormap(cmap)
-cmpN = 128;
-
-subplot(2, 3, 1)
-% sh.Colormap = cmap(128:255, :);
-im = image(mnCplv .* cmpN + cmpN);
-title(grp{1}); xticks(1:10); xticklabels(tx); yticklabels(tx);
-
-cb = colorbar('EastOutside');
-cb.Title.String = 'remove me!';
-delete(cb)
-
-subplot(2, 3, 2)
-image(mnAplv .* cmpN + cmpN)
-title(grp{2}); xticks(1:10); xticklabels(tx); yticklabels(tx);
-
-cb = colorbar('EastOutside');
-cb.Limits = [cmpN cmpN*2];
-cb.Ticks = cmpN:64:cmpN*2;
-cb.TickLabels = round((cb.Ticks - cmpN) ./ cmpN, 2);
-cb.Title.String = 'PLV';
-
-
-subplot(2, 3, 3)
-image(tstPLV .* 256)
-% image((tstPLV + mxdff) / (2 * mxdff) .* 256)
-title([grp{1} ' - ' grp{2}]); xticks(1:10); xticklabels(tx); yticklabels(tx);
-
-cb = colorbar('EastOutside');
-cb.Ticks = [1 64:64:256];
-cb.TickLabels = round(cb.Ticks ./ 256 * (2 * mxdff) - mxdff, 3);
-cb.Title.String = 'PLV diff';
-
-
-chlocs = cEEG.chanlocs(roi);
-[chlocs.labels] = deal(tx{:});
-
-subplot(2, 3, 4)
-topoplot_connect(Cds, chlocs, 'colormap', cmap(128:255, :), 'showlabels', 1)
-
-subplot(2, 3, 5)
-topoplot_connect(Ads, chlocs, 'colormap', cmap(128:255, :), 'showlabels', 1)
-
-subplot(2, 3, 6)
-topoplot_connect(Tds, chlocs, 'colormap', cmap, 'showlabels', 1)
-
-
-%%
-tightfig
-svnm = 'TOVA-PLV-response-nu';
-% svnm = 'TOVA-PLV-response-topo';
-print(gcf, '-dpng', fullfile(oud, 'PLV', svnm))
-
-
 %% Topoplot the neg+pos peaks
 inc = 22;
 fh = figure('Position', [1 1 lbwh(4) lbwh(3)], 'Color', 'w');
@@ -630,31 +417,6 @@ function fh = sbf_erpim2x2(eegA, eegB...
     sgtitle(ttl)
 end
 
-%
-function [plv, plvCI, plvTime] = sbf_get_plv(eeg, roi, millis, filtSpec, nbootci)
-
-    t1 = max(millis(1) - filtSpec.order, eeg.xmin * 1000);
-    t2 = min(millis(2) + filtSpec.order, eeg.xmax * 1000);
-    calcseg = find(eeg.times >= t1, 1) : find(eeg.times <= t2, 1, 'last');
-    plvTime = eeg.times(calcseg);
-
-    bootrep = {'' sprintf(' (with 95%% CIs from %d bootstraps)', nbootci)};
-    fprintf('%s%s for %s;\nCalc segment:%d..%dms to extract:%d..%dms\n'...
-        , 'Calculating Phase-locking value', bootrep{(nbootci > 0) + 1}...
-        , eeg.setname, t1, t2, millis(1), millis(2))
-
-    % calculate PLV
-    [calcCplv, CI] = eegPLV(eeg.data(roi, calcseg, :), eeg.srate, filtSpec...
-                            , 'nbootci', nbootci);
-    
-    use1 = find(eeg.times >= millis(1), 1) - calcseg(1) + 1;
-    use2 = ceil((((millis(2) - millis(1)) / 1000) * eeg.srate) + use1);
-    plv = calcCplv(use1:use2, :, :);
-    if ~isempty(CI)
-        plvCI = CI(use1:use2, :, :, :);
-    end
-    plvTime = plvTime(use1:use2);
-end
 
 % TODO - FINISH CONVERTING TO STANDALONE, AND FIX TO LOOP OVER GIVEN WINDOWS
 function [meanps, latps] = sbf_erpwin_test(CEEG, AEEG, ROI, tstwn)

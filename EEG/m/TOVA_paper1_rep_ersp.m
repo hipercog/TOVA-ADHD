@@ -1,5 +1,5 @@
 ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
-oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extended_anal';
+oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal';
 ROI = {[7 15 19 21 23 28 36] [7 19 21 36] [15 23 28] [81 83 85 87] [68 85 100];
         'parieto-occipital' 'parietal' 'occipital' 'frontocentral' 'frontal'};
 group = {'Control' 'ADHD'};

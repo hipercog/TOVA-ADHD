@@ -1,5 +1,5 @@
 ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
-oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extended_anal/erpimXphase';
+oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal/erpimXphase';
 ROI = [7 15 19 21 23 28 36];
 Pz = 19;
 ctl = 'Control';
