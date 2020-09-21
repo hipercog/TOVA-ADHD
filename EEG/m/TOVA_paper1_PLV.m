@@ -39,7 +39,7 @@ filtSpec.order = 300;
 nbootci = 1000;
 wdwinc = 100;
 
-for e = 4:numel(eegns)
+for e = 1:numel(eegns)
     
     eeg = eval(eegns{e});
     
