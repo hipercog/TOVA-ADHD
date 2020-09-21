@@ -43,22 +43,16 @@ for e = 1:numel(eegns)
     
     eeg = eval(eegns{e});
     
-    % calculate PLV & bootstrap 95% CIs of sliding windows...
-    wdwstarts = -200:wdwinc:600;
+    % calculate PLV & bootstrap 95% CIs of sliding windows...and whole trial
+    wdwstarts = [-200:wdwinc:600 -200];
+    wdwends = [wdwstarts(1:end - 1) + wdwinc * 2 800];
     sldngwdws = cell(1, numel(wdwstarts) + 1);
 
     parfor sw = 1:numel(wdwstarts)
-        tms = [wdwstarts(sw) wdwstarts(sw) + wdwinc * 2];
+        tms = [wdwstarts(sw) wdwends(sw)];
         [plv, plvCI, times] = sbf_get_plv(eeg, roi, tms, filtSpec, nbootci);
         sldngwdws{sw} = {plv, plvCI, times};
     end
-
-    tms = [-200 800];
-
-    % calculate PLV & bootstrap 95% CIs of whole epoch...
-    [plv, plvCI, times] = sbf_get_plv(eeg, roi, tms, filtSpec, nbootci);
-
-    sldngwdws{end} = {plv, plvCI, times};
 
     svnm = [eegns{e} '_PLV_' num2str(now) '.mat'];
     save(fullfile(oud, svnm), 'sldngwdws', '-v7.3')
