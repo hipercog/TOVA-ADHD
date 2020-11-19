@@ -37,6 +37,7 @@ clear sldngwdws tmp fs w
 for c = 1:size(conIx, 1)
     ttl = sprintf('plv:%s-%s', tx{conIx(c, 1)}, tx{conIx(c, 2)});
     
+%     TODO - SUPPRESS START AND END ??!!
     Cwdws{Nwdws}{4}(:, conIx(c, 1), conIx(c, 2)) = ...
         Cwdws{Nwdws}{2}(:, conIx(c, 1), conIx(c, 2), 1) >...
         Awdws{Nwdws}{2}(:, conIx(c, 1), conIx(c, 2), 2);
@@ -77,12 +78,10 @@ end
 swidx = Nwdws;
 for c = 1:size(conIx, 1)
     ttl = sprintf('plv:%s-%s', tx{conIx(c, 1)}, tx{conIx(c, 2)});
-    CgtA = Cwdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2));
-    AgtC = Awdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2));
     
     fh = sbf_plot_sw(conIx(c, 1), conIx(c, 2), Cwdws, Awdws...
-        , 'CgtA', CgtA...
-        , 'AgtC', AgtC...
+        , 'CgtA', Cwdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2))...
+        , 'AgtC', Awdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2))...
         , 'sldg', false...
         , 'smth', 4 ...
         , 'ttl', ttl);
@@ -115,8 +114,21 @@ legend({'Ctrl' '' '' 'ADHD'})
 
 
 %% PLV sliding windows plotting
-% sbf_plot_sw(1, 2, Cwdws, Awdws, 'sldg', false)
 sbf_plot_sw(6, 10, Cwdws, Awdws, 'N', 9)
+
+swidx = Nwdws;
+for c = 45%1:size(conIx, 1)
+    ttl = sprintf('plv:%s-%s', tx{conIx(c, 1)}, tx{conIx(c, 2)});
+    
+    fh = sbf_plot_sw(conIx(c, 1), conIx(c, 2), Cwdws, Awdws...
+        , 'CgtA', Cwdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2))...
+        , 'AgtC', Awdws{swidx}{4}(:, conIx(c, 1), conIx(c, 2))...
+        , 'sldg', false...
+        , 'smth', 4 ...
+        , 'ttl', ttl);
+    print(fh, '-dpng', fullfile(pth, sprintf('TOVA-PLV-testCI-%s', ttl)))
+    close
+end
 
 
 %% PLV time course plot matrix
@@ -128,7 +140,7 @@ pltix = zeros(9, 9);
 pltix(1:81) = 1:81;
 pltix = pltix';
 
-figh = figure('Position', lbwh, 'Color', 'w');
+figh = figure('Position', lbwh .* [1 1 2 2], 'Color', 'w');
 
 for p = 1:size(conIx, 1)
     
@@ -167,44 +179,63 @@ end
 
 %% PLV lead-matrix and scalp-map plotting
 mxall = 0.121;
-for swidx = 1:Nwdws
-    
-    Cplv = Cwdws{swidx}{1};
-    Aplv = Awdws{swidx}{1};
-    plvTs = Cwdws{swidx}{3};
+cmpN = 128;
+chlocs = CHLOCS(roi);
+[chlocs.labels] = deal(tx{:});
+fmt = '-dpng';
 
-    mnCplv = squeeze(mean(Cplv));
-    mnAplv = squeeze(mean(Aplv));
-    [conIx(:, 1), conIx(:, 2)] = ind2sub(size(mnCplv), find(mnCplv)); %Indexing
+for swidx = 1:2:Nwdws
+    
+    plvTs = Cwdws{swidx}{3};
+    wdw_time_str = sprintf('%d:%d', round(plvTs(1)), round(plvTs(end)));
+    if swidx < 10
+        nm = sprintf('%s%d', 'TOVA-PLV-cR-', swidx);
+    else
+        nm = 'TOVA-PLV-corResp';
+    end
+
+    mnCplv = squeeze(mean(Cwdws{swidx}{1}));
+    mnAplv = squeeze(mean(Awdws{swidx}{1}));
+    plvlim = [min(cat(3, mnCplv, mnAplv), [], 'all')...
+              max(cat(3, mnCplv, mnAplv), [], 'all')];
+    CgtApc = squeeze(sum(Cwdws{swidx}{4}) ./ size(Cwdws{swidx}{4}, 1));
+    AgtCpc = squeeze(sum(Awdws{swidx}{4}) ./ size(Awdws{swidx}{4}, 1));
+
     tstPLV = (mnCplv - mnAplv);
 %     mxdff = max(abs(tstPLV), [], 'all');
     tstPLV = (tstPLV + mxall) / (2 * mxall);
-    plvlim = [min(cat(3, mnCplv, mnAplv), [], 'all')...
-              max(cat(3, mnCplv, mnAplv), [], 'all')];
 
     %topoplot_connect structures
     Cds.chanPairs = conIx;
     Cds.connectStrength = mnCplv(mnCplv > 0);
     Cds.connectStrengthLimits = [0 1];%plvlim;
+    Cds.connectWeight = CgtApc(mnCplv > 0);
 
     Ads.chanPairs = conIx;
     Ads.connectStrength = mnAplv(mnAplv > 0);
     Ads.connectStrengthLimits = [0 1];%plvlim;
+    Ads.connectWeight = AgtCpc(mnAplv > 0);
 
     Tds.chanPairs = conIx;
     Tds.connectStrength = tstPLV(tstPLV ~= 0.5);
     Tds.connectStrengthLimits = [0 1];%[min(pPLV) max(pPLV)];
-
-    % and figure
-    fh = figure('Position', lbwh, 'Color', 'w');%[lbwh(1:3) lbwh(4) * 0.5])
-
+    Tds.connectWeight = CgtApc(mnCplv > 0) + AgtCpc(mnAplv > 0);
+    
+    % group-contrast cartoon heads
+    fh_scalp = figure('Position', lbwh .* [1 1 0.2 0.33], 'Color', 'w');
+    topoplot_connect(Tds, chlocs, 'colormap', cmap, 'showlabels', 1)
+    title(wdw_time_str)
+    print(fh_scalp, fmt, fullfile(pth, [nm '_hed_' wdw_time_str]))
+    
+    % Matrix plots
+    fh_mat = figure('Position', lbwh .* [1 1 0.75 0.75], 'Color', 'w');
+    set(0, 'CurrentFigure', fh_mat)
     colormap(cmap)
-    cmpN = 128;
 
     % all-to-all matrix plots
     subplot(2, 3, 1)
-    im = image(mnCplv .* cmpN + cmpN);
-    title(grp{1}); xticks(1:10); xticklabels(tx); yticklabels(tx);
+    image((mnCplv + round(CgtApc' + 0.2)) .* cmpN + cmpN)
+    title(grp{1}); xticks(1:10); xticklabels(tx); yticks(1:10); yticklabels(tx);
 
     cb = colorbar('EastOutside');
     cb.Limits = [cmpN cmpN*2];
@@ -213,8 +244,8 @@ for swidx = 1:Nwdws
     cb.Title.String = 'PLV';
 
     subplot(2, 3, 2)
-    image(cmpN - mnAplv .* cmpN)
-    title(grp{2}); xticks(1:10); xticklabels(tx); yticklabels(tx);
+    image(cmpN - (mnAplv + round(AgtCpc' + 0.2)) .* cmpN)
+    title(grp{2}); xticks(1:10); xticklabels(tx); yticks(1:10); yticklabels(tx);
 
     cb = colorbar('EastOutside');
     set(cb, 'YDir', 'reverse')
@@ -224,18 +255,20 @@ for swidx = 1:Nwdws
     cb.Title.String = 'PLV';
 
     subplot(2, 3, 3)
+    tstPLV = tstPLV + round(CgtApc' + 0.2) / 2 - round(AgtCpc' + 0.2) / 2;
     image(tstPLV .* 256)
-    title([grp{1} ' - ' grp{2}]); xticks(1:10); xticklabels(tx); yticklabels(tx);
+    title([grp{1} ' - ' grp{2}])
+    xticks(1:10); xticklabels(tx); yticks(1:10); yticklabels(tx);
 
     cb = colorbar('EastOutside');
     cb.Ticks = [1 64:64:256];
-    cb.TickLabels = round(cb.Ticks ./ 256 * (2 * mxall) - mxall, 3);
+    cb.TickLabels = round(cb.Ticks ./ 256 * (2 * mxall) - mxall, 2);
     cb.Title.String = 'PLV diff';
 
+    %     tightfig
+%     print(fh_mat, fmt, fullfile(pth, [nm '_mat_' wdw_time_str]))
+    
     % Cartoon head plots
-    chlocs = CHLOCS(roi);
-    [chlocs.labels] = deal(tx{:});
-
     subplot(2, 3, 4)
     topoplot_connect(Cds, chlocs, 'colormap', cmap(128:255, :), 'showlabels', 1)
 
@@ -245,19 +278,11 @@ for swidx = 1:Nwdws
     subplot(2, 3, 6)
     topoplot_connect(Tds, chlocs, 'colormap', cmap, 'showlabels', 1)
 
-
-    %%
 %     tightfig
-    if swidx < 10
-        nm = sprintf('%s%d', 'TOVA-PLV-cR-wdw', swidx);
-    else
-        nm = 'TOVA-PLV-corResp';
-    end
-    svnm = sprintf('%s_%d:%d', nm, round(plvTs(1)), round(plvTs(end)));
-    print(fh, '-dpng', fullfile(pth, svnm))
-    close
-
+    print(fh_mat, fmt, fullfile(pth, [nm '_hds_' wdw_time_str]))
 end
+
+close all
 
 
 %% Subfunctions
