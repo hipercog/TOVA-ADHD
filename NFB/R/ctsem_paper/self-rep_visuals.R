@@ -134,7 +134,7 @@ ggplot(dat, aes(x = GAD, y = slope.score)) +
   theme_minimal()
 ggsave(file.path(odir, "LCxGAD.svg"))
 
-ggplot(dat, aes(x = GAD, y = slope.score, color = learner)) +
+ggplot(dat, aes(x = GAD, y = slope.score)) +
   geom_point(aes(pch = learner)) +
   geom_smooth(method = "lm") +
   ylab("Slope of learning curve") +
