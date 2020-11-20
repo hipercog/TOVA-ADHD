@@ -1,3 +1,21 @@
+
+corrMatrix <- function(..., title = "Correlation matrix")
+{
+  require(corrgram)
+  x <- list(...)
+  # assume data and names have been passed as name-value pairs
+  df <- as.data.frame(x[seq(2,length(x),2)])
+  colnames(df) <- x[seq(1,length(x),2)]
+  
+  corrgram(df, order = TRUE, 
+           lower.panel = panel.ellipse,
+           upper.panel = panel.conf, 
+           text.panel = panel.txt,
+           diag.panel = panel.minmax, 
+           main = title,
+           gap = 1)
+}
+
 # Create text that can be added to ggplot LM ablines
 # function to create the text equation
 lm_eqn <- function(df, lm_object) {
@@ -5,8 +23,8 @@ lm_eqn <- function(df, lm_object) {
     substitute(
       italic(y) == a + b %.% italic(x) * "," ~  ~ italic(r) ^ 2 ~ "=" ~ r2,
       list(
-        a = format(coef(lm_object)[1], digits = 2),
-        b = format(coef(lm_object)[2], digits = 2),
+        a = format(coef(lm_object)[[1]], digits = 2),
+        b = format(coef(lm_object)[[2]], digits = 2),
         r2 = format(summary(lm_object)$r.squared, digits = 3),
         digits = 2
       )

@@ -1,6 +1,9 @@
 ---
 title: "R Notebook"
 output:
+  html_document:
+    toc: yes
+    df_print: paged
   html_notebook:
     toc: yes
     theme: united
@@ -21,13 +24,14 @@ library(lme4)
 library(lmerTest)
 library(sjPlot)
 library(emmeans)
+library(here)
 
 #behavioural data: RT and error rates
-rtimes <- readRDS('data/rtimes_errors.rds')
-error_rates <- readRDS('data/error_rates.rds')
+rtimes <- readRDS(file.path(here(), 'data', 'rtimes_errors.rds'))
+error_rates <- readRDS(file.path(here(), 'data', 'error_rates.rds'))
 
 #neural data
-df <- readRDS('data/psicat_neural.rds')
+df <- readRDS(file.path(here(), 'data', 'psicat_neural.rds'))
 
 #set contrast options
 options(contrasts = c("contr.sum","contr.poly"))

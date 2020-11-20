@@ -6,7 +6,7 @@ library(hrbrthemes)
 library(RColorBrewer)
 source('R/znbnVisuals.R')
 
-odir <- "/home/ben/Dropbox/project_CENT/Publications/WIP - NFB Learning Curves/Figures"
+odir <- "/home/bcowley/Dropbox/project_CENT/Publications/WIP - NFB Learning Curves/Figures"
 
 colv <- brewer.pal(n = 12, name = "Paired")
 
@@ -165,16 +165,20 @@ ggplot(dat, aes(x = GAD, y = slope.score, color = regime)) +
 ggsave(file.path(odir, "LCxGADxRegime.svg"))
 
 
-
-#---- FIGURE FOR ASRS x LEARNER STATUS ----
-dat <- read.csv(file.path('data', 'ASRSxLC.csv'), sep = '\t')
-df <- dat %>%
+#### ASRS DATA ----
+asrs <- read.csv(file.path('data', 'ctsem_paper', 'ASRSxLC.csv'), sep = '\t')
+asrs$DES <- des$DES < 25
+df <- asrs %>%
   pivot_longer(cols = contains(c("inattention", "hyper")), names_to = "ASRS")
 df$ASRS <- as.factor(df$ASRS)
 df$Learner <- as.factor(df$Learner)
 levels(df$Learner) <- c("nonLearner", "Learner")
+df$DES <- as.factor(df$DES)
+levels(df$DES) <- c("DES≥25", "DES<25")
 df$status.ASRS <- with(df, Learner:ASRS)
+df$DES.ASRS <- with(df, DES:ASRS)
 
+#---- FIGURE FOR ASRS x LEARNER STATUS ----
 ggplot(df, aes(x = status.ASRS, y = value)) +
   geom_jitter(aes(fill=Regime), width = 0.2, height = 0.1, size=2, shape=21, stroke=0) +
   scale_colour_manual(values = c(colv[9], colv[10]), aesthetics = c("color", "fill")) +
@@ -187,4 +191,20 @@ ggplot(df, aes(x = status.ASRS, y = value)) +
     axis.title.y= element_text(size=11),
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
-ggsave(paste0(odir, "LCxASRS.svg"))
+ggsave(file.path(odir, "LCxASRS.svg"))
+
+
+#---- FIGURE FOR ASRS x DES LEVEL ----
+ggplot(df, aes(x = DES.ASRS, y = value)) +
+  geom_jitter(aes(fill=Regime), width = 0.2, height = 0.1, size=2, shape=21, stroke=0) +
+  scale_colour_manual(values = c(colv[9], colv[10]), aesthetics = c("color", "fill")) +
+  geom_boxplot(width=0.2, outlier.shape = NA, alpha = 0.4) +
+  labs(title="ASRS factors before and after 30 sessions of treatment", x="ASRS", y = "Score") +
+  theme_minimal() +
+  theme(
+    # legend.position="none",
+    axis.title.x = element_text(size=11),
+    axis.title.y= element_text(size=11),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+ggsave(file.path(odir, "DESxASRS.svg"))
