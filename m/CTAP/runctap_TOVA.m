@@ -125,7 +125,7 @@ Cfg.env.paths.projectRoot = fullfile(proj_dir, ['project_' ID]);
 Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, 'ANALYSIS');
 Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, [grp  user]);
 %THIS ONE IS PROBABLY OBSOLETE - Cfg.MC already gives the file locations
-Cfg.env.paths.dataRoot = fullfile(Cfg.env.paths.projectRoot, [ID '-data'], grp);
+Cfg.env.paths.dataRoot = fullfile(Cfg.env.paths.projectRoot, 'data', grp);
 
 
 %% Define stuff related to Channel locations
@@ -194,8 +194,9 @@ out.fir_filter = struct(...
 
 %% SELECT, BAD CHANNELS, ICA
 i = i+1;  %stepSet 4
+%                     @CTAP_peek_data,...
 stepSet(i).funH = { @CTAP_select_evdata,...
-                    @CTAP_peek_data,...
+                    @CTAP_detect_bad_channels,...%given bad channels
                     @CTAP_detect_bad_channels,... %faster
                     @CTAP_reject_data,...
                     @CTAP_detect_bad_segments,... &+-80uV
@@ -219,9 +220,11 @@ out.peek_data = struct(...
 
 %For all 'detect_bad_x' you should specify at least a method
 out.detect_bad_channels = struct(...
-    'method', 'faster',...
-    'refChannel', 'C21',... %should be 'C21' alias 'Fz'
-    'channelType', {'EEG'});
+     'method', 'given',...
+     'badChanCsv', fullfile(Cfg.env.paths.dataRoot, ['badchans_' grp '.txt']));
+
+out.detect_bad_channels(2).method = 'faster';
+out.detect_bad_channels(2).refChannel = 'C21'; %should be 'C21' alias 'Fz'
 
 out.detect_bad_segments = struct(...
     'amplitudeTh', [-80, 80]); %in muV [-100, 100]

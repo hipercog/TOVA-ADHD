@@ -1,50 +1,172 @@
-ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
+ind = '/home/bcowley/Benslab/CENT/project_TOVA/data/paper1';
 oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal/erpimXphase';
 ROI = [7 15 19 21 23 28 36];
 Pz = 19;
-ctl = 'Control';
-atl = 'ADHD';
+grp = {'Control' 'ADHD'};
 ttl = 'ERP x \alphaphase';
 lbwh = get(0,'ScreenSize');
+clrmp = {'greytight'
+'whatjet(''what'', [0.9 0.9 0.9], ''stops'', [0 0.15 0.25 0.1 0.1 0.25 0.15])'};
+cmap = eval(clrmp{2, 1});
 
 
 %% ERPIM x pre-stim alpha phase
-cEEGh1 = pop_loadset('filepath', ind, 'filename', 'MERGED_H1_CORRECT_RANDOMISED_CONTROL.set');
-cEEGh2 = pop_loadset('filepath', ind, 'filename', 'MERGED_H2_CORRECT_RANDOMISED_CONTROL.set');
-aEEGh1 = pop_loadset('filepath', ind, 'filename', 'merged_h1_correct_randomised_adhd.set');
-aEEGh2 = pop_loadset('filepath', ind, 'filename', 'merged_h2_correct_randomised_adhd.set');
+cEEGh1{1} = pop_loadset('filepath', ind, 'filename', 'MERGED_H1_CORRECT_RANDOMISED_CONTROL.set');
+cEEGh2{1} = pop_loadset('filepath', ind, 'filename', 'MERGED_H2_CORRECT_RANDOMISED_CONTROL.set');
+aEEGh1{1} = pop_loadset('filepath', ind, 'filename', 'merged_h1_correct_randomised_adhd.set');
+aEEGh2{1} = pop_loadset('filepath', ind, 'filename', 'merged_h2_correct_randomised_adhd.set');
+sr = cEEGh1{1}.srate;
+
+
+%% sub-set epoch
+times = [-200 400];
+lockev = {'TRGT' 'NONT'};
+lockevent = {'Target' 'NonTarget'};
+for l = 1:numel(lockev)
+    eeg = pop_epoch(cEEGh1{1}, lockev(l), times / 1000);
+    sub = shuffle(1:eeg.trials);
+    cEEGh1{l + 1} = pop_select(eeg, 'trial', sub(1:457)); %#ok<*SAGROW>
+    eeg = pop_epoch(cEEGh2{1}, lockev(l), times / 1000);
+    sub = shuffle(1:eeg.trials);
+    cEEGh2{l + 1} = pop_select(eeg, 'trial', sub(1:457));
+    
+    eeg = pop_epoch(aEEGh1{1}, lockev(l), times / 1000);
+    sub = shuffle(1:eeg.trials);
+    aEEGh1{l + 1} = pop_select(eeg, 'trial', sub(1:862));
+    eeg = pop_epoch(aEEGh2{1}, lockev(l), times / 1000);
+    sub = shuffle(1:eeg.trials);
+    aEEGh2{l + 1} = pop_select(eeg, 'trial', sub(1:862));
+    
+%     cEEGh2{l + 1} = pop_epoch(cEEGh2{1}, lockev(l), times / 1000);
+%     aEEGh1{l + 1} = pop_epoch(aEEGh1{1}, lockev(l), times / 1000);
+%     aEEGh2{l + 1} = pop_epoch(aEEGh2{1}, lockev(l), times / 1000);
+end
+pts = cEEGh1{2}.pnts;
 
 
 %% testi
-TRD = Pz;
-NM = 'Pz';
+TRD = ROI;
+NM = 'parieto-occipital';
 cax = [-11 11];
-fh = figure('Units','pixels', 'Position', [1 1 lbwh(4) lbwh(3)], 'Color', 'w');
-subplot(4, 1, 1)
-pop_erpimage(...
-    cEEGh1, 1, TRD, [], [ctl ' - H1 - ' ttl ' - ' NM], 100, 1, '', [], []...
-    , 'phasesort', [-80 25 10]...
-    , 'caxis', cax, 'cbar', 'on', 'cbar_title', '\muV', 'noxlabel', 'on')
-% print(fh, '-dsvg', fullfile(oud, [ctl '-H1-erpimXphase-Pz']))
+cbr = 'off';
+plt = 1;
+ylab = 'Phase-sorted Trials';
+fh = figure('Units', 'pixels', 'Posi', lbwh .* [1 1 0.75 0.66], 'Color', 'w');
 
-subplot(4, 1, 2)
-pop_erpimage(...
-    cEEGh2, 1, TRD, [], [ctl ' - H2 - ' ttl ' - ' NM], 100, 1, '', [], []...
-    , 'phasesort', [-80 25 10], 'cbar', 'off', 'noxlabel', 'on')
-% print(fh, '-dsvg', fullfile(oud, [ctl '-H2-erpimXphase-Pz']))
+for g = 1:2
+    for l = 1:numel(lockev)
+        for h = 1:2
 
-subplot(4, 1, 3)
-pop_erpimage(...
-    aEEGh1, 1, TRD, [], [atl ' - H1 - ' ttl ' - ' NM], 285, 1, '', [], []...
-    , 'phasesort', [-80 25 10], 'cbar', 'off', 'noxlabel', 'on')
-% print(fh, '-dsvg', fullfile(oud, [atl '-H1-erpimXphase-Pz']))
+            eeg = eval([lower(grp{g}(1)) 'EEGh' num2str(h)]);
+            eeg = eeg{l + 1};
 
-subplot(4, 1, 4)
-pop_erpimage(...
-    aEEGh2, 1, TRD, [], [atl ' - H2 - ' ttl ' - ' NM], 285, 1, '', [], []...
-    , 'phasesort', [-80 25 10], 'cbar', 'off')
-% print(fh, '-dsvg', fullfile(oud, [atl '-H2-erpimXphase-Pz']))
+            subplot(2, 4, plt)
+            [~, ~, ~, ~, axh, ~] =...
+                erpimage( mean(eeg.data(TRD, :, :), 1) ...
+                    , [] ...
+                    , [times(1) pts sr] ...
+                    , ['H' num2str(h) ' - ' lockevent{l}]...
+                    , round(eeg.trials / 10)...
+                    , 1 ...
+                    , 'erp', 1 ...
+                    , 'erpalpha', 0.001 ...
+                    , 'yerplabel', ''...
+                    , 'caxis', cax...
+                    , 'cbar', cbr...
+                    , 'cbar_title', '\muV'...
+                    , 'phasesort', [-80 5 8 12 0]...
+                    , 'noxlabel', 'on');
+
+            % ERPIM plot tweaking
+            if any(plt == [1 5])
+                ylabel(axh{1}, sprintf('%s\n%s', upper(grp{g}), ylab)...
+                    , 'FontWeight', 'bold'...
+                    , 'Units', 'normalized'...
+                    , 'Position', [-0.2 0.5]...
+                    , 'Rotation', 90)
+            else
+                ylabel(axh{1}, '')
+            end
+            if plt == 3
+                cbr = 'on';
+            else 
+                cbr = 'off';
+            end
+            % colorbar tweaking
+            if plt == 4
+                cbrh = axh{2}.Position(4) / 5;
+                axh{2}.Position(3:4) = axh{2}.Position(3:4) .* 0.8;
+                axh{2}.Position(2) = axh{2}.Position(2) + cbrh;
+            end
+            % ERP underplot tweaking
+            xtickangle(axh{3}, 45)
+            set(axh{3}, 'Color', 'w'...
+                      , 'YLim', [-4 4]...
+                      , 'YAxisLocation', 'right'...
+                      , 'YTick', [-4 0 4]...
+                      , 'YTickLabel', {'-4' '0' '4'})
+            set(axh{3}.Children(5), 'FaceColor', [0.8 0.8 0.8])
+            if plt < 5
+                set(axh{3}.Children(2), 'Color', 'r')
+            end
+            if any(plt == [4 8])
+                ylabel(axh{3}, '\muV'...
+                    , 'FontWeight', 'bold'...
+                    , 'Units', 'normalized'...
+                    , 'Position', [1.15 1]...
+                    , 'Rotation', 0)
+            end
+            if plt == 8
+                xlabel(axh{3}, sprintf('Time\n(ms)')...
+                    , 'FontWeight', 'bold'...
+                    , 'Units', 'normalized'...
+                    , 'Position', [0.9 -0.5]...
+                    , 'Rotation', 45)
+            end
+
+            plt = plt + 1;
+
+        end
+    end
+end
+
+
+%%
+colormap(cmap)
 print(fh, '-dsvg', fullfile(oud, ['TOVA-erpimXphase-' NM]))
+close
+        
+% subplot(2, 2, 2)
+% pop_erpimage(cEEGh2sub, 1, TRD, [], [ctl ' - H2 - ' ttl ' - ' NM]...
+%     , round(cEEGh2sub.trials / 15), 1 ...
+%     , '', [], [], 'phasesort', [-80 25 10]...
+%     , 'caxis', cax, 'cbar', 'on', 'cbar_title', '\muV', 'noxlabel', 'on')
+% 
+% subplot(2, 2, 3)
+% pop_erpimage(aEEGh1sub, 1, TRD, [], [atl ' - H1 - ' ttl ' - ' NM]...
+%     , round(aEEGh1sub.trials / 15), 1 ...
+%     , '', [], [], 'phasesort', [-80 25 10], 'noxlabel', 'on')
+% 
+% subplot(2, 2, 4)
+% pop_erpimage(aEEGh2sub, 1, TRD, [], [atl ' - H2 - ' ttl ' - ' NM]...
+%     , round(aEEGh2sub.trials / 15), 1 ...
+%     , '', [], [], 'phasesort', [-80 25 10], 'cbar', 'off')
+
+
+% EXAMPLE
+% [~, ~, ~, ~, axh, erp{g, c, r}] =...
+%                 erpimage( mean(eeg.data(ROI{1, r}, dsg, :), 1)...
+%                     , eeg_getepochevent( eeg, {'TRGT'}, [], 'latency')...
+%                     , [startms(c) numel(dsg) eeg.srate]...
+%                     , ttl, smth(g), 1 ...
+%                     , 'erp', 1 ...
+%                     , 'erpalpha', 0.001 ...
+%                     , 'yerplabel', ''...
+%                     , 'caxis', cax...
+%                     , 'cbar', cbr...
+%                     , 'cbar_title', '\muV'...
+%                     , 'img_trialax_label', ylab...
+%                     , 'noxlabel', 'on'); %#ok<CCAT1>
 
 
 %% Load EEGLAB study for pre-stim phase work
