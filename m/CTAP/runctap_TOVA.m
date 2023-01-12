@@ -29,14 +29,14 @@ function ERPS = runctap_TOVA(varargin)
 %   user        string, an identifier string to append to output base dir
 %               default, ''
 %   proj_root   string, valid path to the data's project base folder, so that:
-%                       <proj_root>/project_TOVA/TOVA-data/<group>
+%                       <proj_root>/project_TOVA/data/<group>
 %               Default: '/wrk/group/hipercog/' (dir on ukko2 server)
 %   group       string, name of the group to analyse, ADHD or CTRL
 %               Default: ADHD
 %   qcERPloc    string, if not null, run QC grand average ERP on this electrode
 %               Default: ''
 %   getsets     [1 n] | 'all', keyword 'all' selects all stepSets, or use index
-%               Default: 'all'
+%               Default: [1 3:6]
 %   sbj_filt    [1 n] | 'all', keyword 'all' for all, or some index of subjects
 %               Default: 'all'
 %   overwrite   logical, overwrite existing output
@@ -60,7 +60,7 @@ p = inputParser;
 p.addParameter('user', '', @ischar)
 p.addParameter('proj_root', '/wrk/group/hipercog/', @ischar)
 p.addParameter('group', 'Control', @(x) ismember(x, {'Control' 'Intake' 'Outtake'}))
-p.addParameter('getsets', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
+p.addParameter('getsets', [1 3:6], @(x) strcmp(x, 'all') || isnumeric(x))
 p.addParameter('sbj_filt', 'all', @(x) strcmp(x, 'all') || isnumeric(x))
 p.addParameter('qcERPloc', '', @ischar)
 p.addParameter('overwrite', true, @islogical)
@@ -82,8 +82,8 @@ Arg = p.Results;
 Cfg = get_meas_cfg_MC(Cfg, Cfg.env.paths.dataRoot...
                     , 'eeg_ext', data_type...
                     , 'sbj_filt', Arg.sbj_filt...
-                    , 'subject', {'[0-9]{4}[CP]', 0, 5}...
-                    , 'subjectnr', {'[0-9]{4}[CP]', 0, 4}...
+                    , 'subject', {'[0-9]{4}[TWCP]', 0, 5}...
+                    , 'subjectnr', {'[0-9]{4}[TWCP]', 0, 4}...
                     , 'session', {ctapID}...
                     , 'measurement', {Arg.group});
 
@@ -159,7 +159,7 @@ out.load_chanlocs.field = {{1:128 'type' 'EEG'}...
         {'EXG3' 'labels' 'HEOG1'} {'EXG4' 'labels' 'HEOG2'}...
         {'EXG5' 'labels' 'VEOG1'} {'EXG6' 'labels' 'VEOG2'}...
         {'EXG7' 'labels' 'L_MASTOID'} {'EXG8' 'labels' 'R_MASTOID'}};
-out.load_chanlocs.tidy  = {{'type' 'NA'}};
+out.load_chanlocs.tidy  = {{'type' {'NA' 'ECG' 'EDA'}}};
 
 out.load_events = struct(...
     'method', 'handle',...
@@ -169,11 +169,11 @@ out.reref_data = struct('reference', 'REF');
 
 
 %% EXTRACT ANS SIGNALS
+% extract data is only to be called once -> should be skipped normally
 i = i+1;  %stepSet 2
 stepSet(i).funH = { @CTAP_extract_signal};
 stepSet(i).id = [num2str(i) '_EXTRACT'];
 stepSet(i).save = false;
-% extract data is only to be called once -> hence a cut here
 
 out.extract_signal.types = {'ECG' 'EDA'};
 
@@ -254,21 +254,22 @@ out.detect_bad_comps = struct(...
 
 %% INTERPOLATE BAD CHANNELS AND FINAL PEEK
 i = i+1;  %stepSet 6
+% @CTAP_select_data,...
 stepSet(i).funH = { @CTAP_interp_chan,...
                     @CTAP_peek_data};
 stepSet(i).id = [num2str(i) '_INTERP'];
 
-out.interp_chan = struct('missing_types', 'EEG');
+out.interp_chan = struct(...
+    'select', 'missing',...
+    'missing_types', 'EEG');
+
+% out.select_data = struct( ...
+%     'channel', );
 
 
 
 %% Store to Cfg
 Cfg.pipe.stepSets = stepSet; % return all step sets inside Cfg struct
-% step sets to run, default: whole thing
-if exist('runsets', 'var')
-    Cfg.pipe.runSets = runsets;
-else
-    Cfg.pipe.runSets = {stepSet(:).id};
-end
+Cfg.pipe.runSets = runsets;
 
 end

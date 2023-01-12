@@ -1,7 +1,10 @@
-ind = '/home/bcowley/Benslab/CENT/project_TOVA/TOVA-data/paper1';
+ind = '/home/bcowley/Benslab/CENT/project_TOVA/data/paper1';
 oud = '/home/bcowley/Benslab/CENT/project_TOVA/ANALYSIS/paper1_extanal';
-ROI = {[7 15 19 21 23 28 36] [7 19 21 36] [15 23 28] [81 83 85 87] [68 85 100];
-        'parieto-occipital' 'parietal' 'occipital' 'frontocentral' 'frontal'};
+% ROI = {[7 15 19 21 23 28 36] [7 19 21 36] [15 23 28] [81 83 85 87] [68 85 100];
+%         'parieto-occipital' 'parietal' 'occipital' 'frontocentral' 'frontal'};
+ROI = {[7 5 4 32 36 17 21 30] [68 77 85 90 100 78 83 91]
+        'parietal' 'frontal'};
+rois = [7 5 4 32 36 17 21 30 68 77 85 90 100 78 83 91];
 group = {'Control' 'ADHD'};
 cond = {'rsp' 'inb'; 'response' 'inhibition'};
 lbwh = get(0,'ScreenSize');
@@ -11,29 +14,28 @@ clrmp = {'whatjet(''what'', [0.9 0.9 0.9], ''stops'', [0 0.15 0.25 0.1 0.1 0.25 
          'greytight' 'whiter' 'viridis'};
 
 
-%% ERPIM x pre-stim alpha phase
+%% ERSP DATA - CORRECT RESPONSES & INHIBITIONS
 cEEG = pop_mergeset( ...
     pop_loadset('filepath', ind, 'filename', 'MERGED_H1_CORRECT_RANDOMISED_CONTROL.set')...
   , pop_loadset('filepath', ind, 'filename', 'MERGED_H2_CORRECT_RANDOMISED_CONTROL.set'));
-ix = cellfun(@(x) any(ismember(x, 'cor_rsp')), {cEEG.epoch.eventtype});
-cEEGrsp = pop_select(cEEG, 'trial', find(ix));
-ix = cellfun(@(x) any(ismember(x, 'cor_inb')), {cEEG.epoch.eventtype});
-cEEGinb = pop_select(cEEG, 'trial', find(ix));
+% ix = cellfun(@(x) any(ismember(x, 'cor_rsp')), {cEEG.epoch.eventtype});
+% cEEGrsp = pop_select(cEEG, 'trial', find(ix));
+% ix = cellfun(@(x) any(ismember(x, 'cor_inb')), {cEEG.epoch.eventtype});
+% cEEGinb = pop_select(cEEG, 'trial', find(ix));
 
 aEEG = pop_mergeset( ...
     pop_loadset('filepath', ind, 'filename', 'merged_h1_correct_randomised_adhd.set')...
   , pop_loadset('filepath', ind, 'filename', 'merged_h2_correct_randomised_adhd.set'));
-ix = cellfun(@(x) any(ismember(x, 'cor_rsp')), {aEEG.epoch.eventtype});
-aEEGrsp = pop_select(aEEG, 'trial', find(ix));
-ix = cellfun(@(x) any(ismember(x, 'cor_inb')), {aEEG.epoch.eventtype});
-aEEGinb = pop_select(aEEG, 'trial', find(ix));
+% ix = cellfun(@(x) any(ismember(x, 'cor_rsp')), {aEEG.epoch.eventtype});
+% aEEGrsp = pop_select(aEEG, 'trial', find(ix));
+% ix = cellfun(@(x) any(ismember(x, 'cor_inb')), {aEEG.epoch.eventtype});
+% aEEGinb = pop_select(aEEG, 'trial', find(ix));
 
 
 %% Topoplot the neg+pos peaks
 cax = {[-2 0] 'maxmin' 'absmax'};
 % itv = 565:616;
 m = 1; % using greytight since it works for ERSPs
-roi = [ROI{1, 1} ROI{1, 5}];
 
 for s = 1%:numel(cax) %using only matched scales since they seem best
     t0 = 513;
@@ -69,7 +71,7 @@ for s = 1%:numel(cax) %using only matched scales since they seem best
                     , 'headrad', 0 ...
                     , 'plotrad', 0.6 ...
                     , 'emarker', {'.', 'k', 2, 1}...
-                    , 'emarker2', {roi, 'o', 'k', 7, 1}...
+                    , 'emarker2', {[ROI{1, 1} ROI{1, 2}], 'o', 'k', 7, 1}...
                     , 'maplimits', scl...
                     , 'colormap', eval(clrmp{1, m}))
                 hold on
@@ -77,7 +79,7 @@ for s = 1%:numel(cax) %using only matched scales since they seem best
                     , 'style', 'blank'...
                     , 'headrad', 0 ...
                     , 'plotrad', 0.6 ...
-                    , 'plotchans', roi(1:7)...
+                    , 'plotchans', ROI{1, 1}...
                     , 'electrodes', 'on'...
                     , 'emarker', {'o', 'm', 5, 2}...
                     , 'colormap', eval(clrmp{1, m}))
@@ -85,7 +87,7 @@ for s = 1%:numel(cax) %using only matched scales since they seem best
                     , 'style', 'blank'...
                     , 'headrad', 0.5 ...
                     , 'plotrad', 0.6 ...
-                    , 'plotchans', roi(8:10)...
+                    , 'plotchans', ROI{1, 2}...
                     , 'electrodes', 'on'...
                     , 'emarker', {'x', 'm', 6, 2}...
                     , 'colormap', eval(clrmp{1, m}))
@@ -129,7 +131,7 @@ ten20 =   {'AF7' 'AF8' 'C3' 'C4' 'Cz' 'F3' 'F4' 'Fpz' 'Fz'...
             'Oz' 'P3' 'P4' 'PO7' 'PO8' 'Pz' 'T7' 'T8'};
 
 
-%% ERSP - Pz
+%% ERSP - single channel approach
 % chs = 19; % debug 
 for ch = 1:numel(chs)
 %     for l = 1:numel(cyc)

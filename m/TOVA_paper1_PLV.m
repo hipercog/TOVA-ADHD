@@ -10,27 +10,27 @@ tx = biosemi1020(roi);
 eegns = {'cEEG' 'aEEG' 'cEEGloRT' 'cEEGhiRT' 'aEEGloRT' 'aEEGhiRT'};
 
 
-% LOAD CORRECT RESPONSE DATA
-cEEG = pop_loadset('filepath', ind...
-                 , 'filename', 'CONTROL_MERGED_randomised_COR_RSP_TOTAL.set');
-aEEG = pop_loadset('filepath', ind...
-                 , 'filename', 'ADHD_MERGED_randomised_COR_RSP_TOTAL.set');
-
-% % epoch aligned to RT
-% ix = [cEEG.event(ismember({cEEG.event.type}, 'cor_rsp')).duration] > 600;
-% cEEGrt = pop_epoch(pop_select(cEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
-% ix = [aEEG.event(ismember({aEEG.event.type}, 'cor_rsp')).duration] > 600;
-% aEEGrt = pop_epoch(pop_select(aEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
-
-% Subset by median RT
-Crts = eeg_getepochevent(cEEG, {'cor_rsp'}, [], 'duration');
-idx = Crts < median(Crts);
-cEEGloRT = pop_select(cEEG, 'trial', find(idx));
-cEEGhiRT = pop_select(cEEG, 'trial', find(~idx));
-Arts = eeg_getepochevent(aEEG, {'cor_rsp'}, [], 'duration');
-idx = Arts < median(Arts);
-aEEGloRT = pop_select(aEEG, 'trial', find(idx));
-aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
+% % LOAD CORRECT RESPONSE DATA
+% cEEG = pop_loadset('filepath', ind...
+%                  , 'filename', 'CONTROL_MERGED_randomised_COR_RSP_TOTAL.set');
+% aEEG = pop_loadset('filepath', ind...
+%                  , 'filename', 'ADHD_MERGED_randomised_COR_RSP_TOTAL.set');
+% 
+% % % epoch aligned to RT
+% % ix = [cEEG.event(ismember({cEEG.event.type}, 'cor_rsp')).duration] > 600;
+% % cEEGrt = pop_epoch(pop_select(cEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
+% % ix = [aEEG.event(ismember({aEEG.event.type}, 'cor_rsp')).duration] > 600;
+% % aEEGrt = pop_epoch(pop_select(aEEG, 'notrial', ix), {'RESP'}, [-0.6 0.4]);
+% 
+% % Subset by median RT
+% Crts = eeg_getepochevent(cEEG, {'cor_rsp'}, [], 'duration');
+% idx = Crts < median(Crts);
+% cEEGloRT = pop_select(cEEG, 'trial', find(idx));
+% cEEGhiRT = pop_select(cEEG, 'trial', find(~idx));
+% Arts = eeg_getepochevent(aEEG, {'cor_rsp'}, [], 'duration');
+% idx = Arts < median(Arts);
+% aEEGloRT = pop_select(aEEG, 'trial', find(idx));
+% aEEGhiRT = pop_select(aEEG, 'trial', find(~idx));
 
 
 % Phase-locking tests

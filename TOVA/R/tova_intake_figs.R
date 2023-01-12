@@ -2,49 +2,61 @@ library(tidyverse)
 library(ggplot2)
 library(gghalves)
 library(ggridges)
+library(ggpubr)
 library(viridis)
 library(hrbrthemes)
+library(patchwork)
 library(here)
 
 odir <- file.path(here(), 'figures')
-indir <- file.path(here(), 'data')
+SAVE <- FALSE
+comps = list( c("ADHD", "control") )
+pvals <- c(0.046, 0.024, 0.037)
 
-dat <- readxl::read_xlsx('tova_parsed__2013-08-22_12-15-08.xlsx')
+dat <- readxl::read_xlsx(file.path(here(), 'data', 'tova_parsed__2013-08-22_12-15-08.xlsx'))
 
 df <-
   dat %>% filter(SESNUM == 1 & SEITOTAL < 3) %>% 
-  select(-SESNUM, -GroupName...6, -DOB, -DoB) #PatientHealthy == 2 | TDATE < "2013-01-01")
+  select(-SESNUM, -GroupName_prepost, -DOB, -DoB) #PatientHealthy == 2 | TDATE < "2013-01-01")
 df$PatientHealthy <- as.factor(df$PatientHealthy)
-levels(df$PatientHealthy) <- c("ADHD", "control")
+levels(df$PatientHealthy) <- c("Control", "ADHD")
 df$TestWLControl <- as.factor(df$TestWLControl)
-df <- rename(df, Group = GroupName...5)
+df <- rename(df, Group = GroupName)
 df$Group <- as.factor(df$Group)
 df$GENDER <- as.factor(df$GENDER)
 
 
 # Plot after simple group comparisons
-ggplot(data = df, aes(x = PatientHealthy, y = COMSSH1)) +
+violnCOM <- ggplot(data = df, aes(x = PatientHealthy, y = COMSSH1, fill = PatientHealthy)) +
   geom_violin() + 
   geom_point(pch = 21, position = position_jitter(width = 0.15, height = 0.05)) +
   xlab(NULL) +
-  theme_minimal()
-ggsave(file.path(odir, "comerr_ss_h1.svg"))
+  ylab('H1 Commission errors\n (standard scores)') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12), 
+        legend.position = "none",
+        plot.margin = unit(c(0,0,0,0), "cm"))
 
-
-ggplot(data = df, aes(x = PatientHealthy, y = DPRSSH1)) +
+violnDPR <- ggplot(data = df, aes(x = PatientHealthy, y = DPRSSH1, fill = PatientHealthy)) +
   geom_violin() + 
   geom_point(pch = 21, position = position_jitter(width = 0.15, height = 0.05)) +
   xlab(NULL) +
-  theme_minimal()
-ggsave(file.path(odir, "dprime_ss_h1.svg"))
+  ylab('H1 D\' (standard scores)') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12), 
+        legend.position = "none",
+        plot.margin = unit(c(0,0,0,0), "cm"))
 
 
-ggplot(data = df, aes(x = PatientHealthy, y = VARSSH2)) +
+violnVAR <- ggplot(data = df, aes(x = PatientHealthy, y = VARSSH2, fill = PatientHealthy)) +
   geom_violin() + 
   geom_point(pch = 21, position = position_jitter(width = 0.15, height = 0.05)) +
   xlab(NULL) +
-  theme_minimal()
-ggsave(file.path(odir, "rtv_ss_h2.svg"))
+  ylab('H2 RTV (standard scores)') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12), 
+        legend.position = "none",
+        plot.margin = unit(c(0,0,0,0), "cm"))
 
 
 
@@ -69,9 +81,9 @@ dfl <-
                names_pattern = "([A-Z]*)H([12])") %>%
   mutate(Half = factor(Half, labels = c("H1", "H2"))) %>%
   mutate(group.time = PatientHealthy:Half) %>%
-  filter(OMSS > mean(OMSS) - sd(OMSS) * 3 & OMSS < mean(OMSS) + sd(OMSS) * 3)
+  filter(OMSS > mean(OMSS) - (sd(OMSS)) & OMSS < mean(OMSS) + (sd(OMSS)))
 
-ggplot(dfl, aes(x = OMSS, y = group.time, fill = factor(stat(quantile)))) +
+ridgeOMS <- ggplot(dfl, aes(x = OMSS, y = group.time, fill = factor(stat(quantile)))) +
   stat_density_ridges(
     geom = "density_ridges_gradient",
     calc_ecdf = TRUE,
@@ -80,18 +92,19 @@ ggplot(dfl, aes(x = OMSS, y = group.time, fill = factor(stat(quantile)))) +
     vline_color = "red3",
     jittered_points = TRUE,
     position = position_points_jitter(width = 0.05, height = 0),
-    point_shape = '|', point_size = 1.5, point_alpha = 0.8
+    point_shape = '|', point_size = 2.5, point_alpha = 0.8
   ) +
   scale_fill_manual(
     name = "Probability", values = c("#666666A0", "#E0E0E0A0", "#E0E0E0A0", "#999999A0")
   ) +
+  xlab('Omission errors (standard scores)') +
   theme_ipsum() +
   theme(
     legend.position="none",
     panel.spacing = unit(0.1, "lines"),
-    strip.text.x = element_text(size = 12)
+    strip.text.x = element_text(size = 12),
+    plot.margin = unit(c(0,0,0,0), "cm")
   )
-  ggsave(file.path(odir, "omerr_ss_ridge.svg"))
 
 dfl <-
   df %>% select(1:8, starts_with("COMSSH")) %>% 
@@ -102,7 +115,7 @@ dfl <-
   mutate(group.time = PatientHealthy:Half) %>%
   filter(COMSS > mean(COMSS) - sd(COMSS) * 3 & COMSS < mean(COMSS) + sd(COMSS) * 3)
 
-ggplot(dfl, aes(x = COMSS, y = group.time, fill = factor(stat(quantile)))) +
+ridgeCOM <- ggplot(dfl, aes(x = COMSS, y = group.time, fill = factor(stat(quantile)))) +
   stat_density_ridges(
     geom = "density_ridges_gradient",
     calc_ecdf = TRUE,
@@ -111,18 +124,19 @@ ggplot(dfl, aes(x = COMSS, y = group.time, fill = factor(stat(quantile)))) +
     vline_color = "red3",
     jittered_points = TRUE,
     position = position_points_jitter(width = 0.05, height = 0),
-    point_shape = '|', point_size = 1.5, point_alpha = 0.7
+    point_shape = '|', point_size = 2.5, point_alpha = 0.7
   ) +
   scale_fill_manual(
     name = "Probability", values = c("#666666A0", "#E0E0E0A0", "#E0E0E0A0", "#999999A0")
   ) +
+  xlab('Commission errors (standard scores)') +
   theme_ipsum() +
   theme(
     legend.position="none",
     panel.spacing = unit(0.1, "lines"),
-    strip.text.x = element_text(size = 12)
+    strip.text.x = element_text(size = 12),
+    plot.margin = unit(c(0,0,0,0), "cm")
   )
-ggsave(file.path(odir, "comerr_ss_ridge.svg"))
 
 
 dfl <-
@@ -134,7 +148,7 @@ dfl <-
   mutate(group.time = PatientHealthy:Half) %>%
   filter(DPRSS > mean(DPRSS) - sd(DPRSS) * 3 & DPRSS < mean(DPRSS) + sd(DPRSS) * 3) 
 
-ggplot(dfl, aes(x = DPRSS, y = group.time, fill = factor(stat(quantile)))) +
+ridgeDPR <- ggplot(dfl, aes(x = DPRSS, y = group.time, fill = factor(stat(quantile)))) +
   stat_density_ridges(
     geom = "density_ridges_gradient",
     calc_ecdf = TRUE,
@@ -143,23 +157,29 @@ ggplot(dfl, aes(x = DPRSS, y = group.time, fill = factor(stat(quantile)))) +
     vline_color = "red3",
     jittered_points = TRUE,
     position = position_points_jitter(width = 0.05, height = 0),
-    point_shape = '|', point_size = 1.5, point_alpha = 0.8
+    point_shape = '|', point_size = 2.5, point_alpha = 0.8
   ) +
   scale_fill_manual(
     name = "Probability", values = c("#666666A0", "#E0E0E0A0", "#E0E0E0A0", "#999999A0")
   ) +
+  xlab('D\' (standard scores)') +
   theme_ipsum() +
   theme(
     legend.position="none",
     panel.spacing = unit(0.1, "lines"),
-    strip.text.x = element_text(size = 12)
+    strip.text.x = element_text(size = 12),
+    plot.margin = unit(c(0,0,0,0), "cm")
   )
-ggsave(file.path(odir, "dprime_ss_ridge.svg"))
 
 
-# ggplot(dfl, aes(x = PatientHealthy, y = DPRSS, color = Half)) +
-#   geom_boxplot() +
-#   labs(title = 'D-prime std scores, group x TOVA condition') +
-#   xlab(NULL) +
-#   theme_minimal()
-# ggsave(paste0(odir, "dprime_ss_box.png"))
+if(SAVE){
+  ggsave(file.path(odir, "comerr_ss_h1.svg"), plot = violnCOM)
+  ggsave(file.path(odir, "dprime_ss_h1.svg"), plot = violnDPR)
+  ggsave(file.path(odir, "rtv_ss_h2.svg"), plot = violnVAR)
+  ggsave(file.path(odir, "omerr_ss_ridge.svg"), plot = ridgeOMS)
+  ggsave(file.path(odir, "comerr_ss_ridge.svg"), plot = ridgeCOM)
+  ggsave(file.path(odir, "dprime_ss_ridge.svg"), plot = ridgeDPR)
+}
+
+(violnCOM + violnDPR + violnVAR + ridgeCOM + ridgeDPR + ridgeOMS) + 
+  plot_layout(guides="collect") + plot_annotation(tag_levels = 'A')
